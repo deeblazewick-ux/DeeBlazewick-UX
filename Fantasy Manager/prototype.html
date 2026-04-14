@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fantasy Advisor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Light UI + neutral chrome; primary actions use blue (not ESPN red) */
+    :root {
+      --bg: #eceef1;
+      --surface: #ffffff;
+      --surface-2: #f4f5f7;
+      --border: #d9dce2;
+      --accent: #2563eb;
+      --accent-bright: #1d4ed8;
+      --accent-glow: rgba(37, 99, 235, 0.09);
+      --green: #047857;
+      --green-soft: #d1fae5;
+      --yellow: #b45309;
+      --yellow-soft: #fef3c7;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --text: #1a1a1a;
+      --text-muted: #5c6370;
+      --text-dim: #8b9199;
+      --radius: 12px;
+      --radius-sm: 8px;
+      color-scheme: light;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Screen system ── */
+    .screen { display: none; flex-direction: column; min-height: 100vh; }
+    .screen.active { display: flex; }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 40px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      row-gap: 10px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 17px; letter-spacing: -0.3px;
+    }
+    .nav-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .nav-meta {
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap; justify-content: flex-end; row-gap: 8px;
+    }
+    .nav-updated {
+      font-size: 11px; color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .nav-updated::before { content: "↻ "; opacity: 0.7; }
+    .nav-league {
+      font-size: 13px; color: var(--text-muted);
+      background: var(--surface-2); border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 20px;
+    }
+    .lock-badge {
+      font-size: 12px; color: var(--yellow);
+      background: var(--yellow-soft); border: 1px solid rgba(180, 83, 9, 0.25);
+      padding: 5px 12px; border-radius: 20px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .lock-badge::before { content: "⏱"; }
+
+    /* ── Page layout ── */
+    .page {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 40px 60px;
+    }
+    .page-narrow { max-width: 780px; }
+
+    /* ── Typography ── */
+    h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; }
+    h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    h3 { font-size: 15px; font-weight: 600; }
+    .label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .muted { color: var(--text-muted); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card + .card { margin-top: 12px; }
+    .card-sm { padding: 16px 20px; }
+
+    /* ── Player photos ── */
+    .player-photo {
+      position: relative;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: top center;
+      display: block;
+    }
+    .player-photo .initials {
+      font-weight: 700; color: var(--text-muted);
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-photo.has-photo .initials { display: none; }
+    /* Small — roster rows */
+    .player-photo-sm { width: 36px; height: 36px; }
+    .player-photo-sm .initials { font-size: 11px; }
+    /* Large — comparison cards */
+    .player-photo-lg {
+      width: 80px; height: 80px;
+      border-width: 2px;
+      margin: 0 auto 14px;
+    }
+    .player-photo-lg .initials { font-size: 20px; }
+    /* Status ring */
+    .player-photo.ring-green { border-color: var(--green); }
+    .player-photo.ring-yellow { border-color: var(--yellow); }
+    .player-photo.ring-red { border-color: var(--red); }
+
+    /* Stacked avatars on decision cards */
+    .decision-avatars {
+      display: flex; align-items: center;
+    }
+    .decision-avatars .player-photo {
+      width: 30px; height: 30px;
+      border: 2px solid var(--surface);
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    .decision-avatars .player-photo + .player-photo { margin-left: -8px; }
+    .decision-avatars .player-photo .initials { font-size: 10px; }
+
+    /* ── Advisor message ── */
+    .advisor-message {
+      position: relative;
+      background: var(--accent-glow);
+      border: 1px solid rgba(37, 99, 235, 0.22);
+      border-radius: var(--radius);
+      padding: 20px 44px 20px 24px;
+      margin-bottom: 32px;
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .advisor-message.is-dismissed { display: none; }
+    .advisor-restore-wrap { margin-bottom: 20px; margin-top: -8px; }
+    .advisor-restore-wrap.is-hidden { display: none; }
+    .link-restore {
+      background: none; border: none; padding: 0;
+      color: var(--accent);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .link-restore:hover { color: var(--accent-bright); }
+    .link-restore:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+    .advisor-dismiss {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: rgba(0,0,0,0.05);
+      color: var(--text-muted);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .advisor-dismiss:hover {
+      background: rgba(0,0,0,0.08);
+      color: var(--text);
+    }
+    .advisor-dismiss:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .advisor-text { font-size: 15px; line-height: 1.55; }
+    .advisor-text strong { color: var(--text); }
+    .advisor-text p { margin: 0; }
+    .advisor-text p + p { margin-top: 12px; }
+
+    /* ── Section headers ── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    /* ── Decision cards (home) ── */
+    .decision-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 10px;
+    }
+    .decision-card:hover { border-color: var(--accent); background: var(--surface-2); }
+    .decision-card.resolved { opacity: 0.55; cursor: default; }
+    .decision-card.resolved:hover { border-color: var(--border); background: var(--surface); }
+    .decision-left { display: flex; align-items: center; gap: 14px; }
+    .decision-spot {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 6px 10px;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      min-width: 50px; text-align: center; letter-spacing: 0.3px;
+    }
+    .decision-title { font-size: 15px; font-weight: 600; }
+    .decision-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .decision-right { display: flex; align-items: center; gap: 12px; }
+    .decision-urgency {
+      font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600;
+    }
+    .urgency-open { background: var(--yellow-soft); color: var(--yellow); border: 1px solid rgba(180, 83, 9, 0.22); }
+    .urgency-done { background: var(--green-soft); color: var(--green); border: 1px solid rgba(4, 120, 87, 0.2); }
+    .decision-arrow { color: var(--text-dim); font-size: 18px; }
+
+    /* ── Roster health ── */
+    .roster-row {
+      display: flex; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .roster-row:last-child { border-bottom: none; }
+    .roster-pos { font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 36px; }
+    .roster-info { flex: 1; }
+    .roster-name { font-size: 14px; font-weight: 600; }
+    .roster-team { font-size: 12px; color: var(--text-muted); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .status-green { background: var(--green); }
+    .status-yellow { background: var(--yellow); }
+    .status-red { background: var(--red); }
+    .status-label { font-size: 12px; font-weight: 600; }
+    .status-label.green { color: var(--green); }
+    .status-label.yellow { color: var(--yellow); }
+    .status-label.red { color: var(--red); }
+    .roster-status { display: flex; align-items: center; gap: 6px; }
+    .roster-row > .roster-status { margin-left: auto; }
+    .roster-row-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .roster-row--interactive {
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      margin: 2px -10px;
+      padding: 8px 10px;
+      transition: background 0.15s;
+    }
+    .roster-row--interactive:hover {
+      background: rgba(0,0,0,0.035);
+    }
+    .roster-row--interactive:focus {
+      outline: none;
+    }
+    .roster-row--interactive:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .roster-row-affordance {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .roster-row--interactive:hover .roster-row-affordance {
+      color: var(--accent-bright);
+    }
+    .roster-row-affordance-chevron {
+      font-size: 16px;
+      color: var(--text-dim);
+      line-height: 1;
+    }
+    .roster-row--interactive:hover .roster-row-affordance-chevron {
+      color: var(--accent-bright);
+    }
+
+    /* ── Injury / status panel (modal) ── */
+    .status-panel-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .status-panel-backdrop.is-hidden { display: none; }
+    .status-panel {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-width: 460px;
+      width: 100%;
+      padding: 24px 28px 20px;
+      max-height: min(88vh, 640px);
+      overflow-y: auto;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.14);
+    }
+    .status-panel-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: rgba(0,0,0,0.05);
+      color: var(--text-muted);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-panel-close:hover { background: rgba(0,0,0,0.08); color: var(--text); }
+    .status-panel-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .status-panel h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      padding-right: 36px;
+    }
+    .status-panel .status-meta {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+    .status-panel .status-block {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+    .status-panel .status-block strong { color: var(--text); }
+    .status-panel .status-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--yellow-soft);
+      color: var(--yellow);
+      border: 1px solid rgba(180, 83, 9, 0.25);
+      margin-bottom: 12px;
+    }
+    .status-panel-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ── Grid ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    /* ── Back button ── */
+    .back-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); font-size: 13px; font-weight: 500;
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: border-color 0.15s, color 0.15s;
+      margin-bottom: 32px;
+    }
+    .back-btn:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* ── Decision header ── */
+    .decision-header { margin-bottom: 28px; }
+    .decision-header .label { margin-bottom: 8px; }
+    .decision-header h1 { margin-bottom: 6px; }
+    .decision-header p { color: var(--text-muted); font-size: 15px; }
+
+    /* ── Player comparison cards ── */
+    .player-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      position: relative;
+      transition: border-color 0.15s;
+      text-align: center;
+    }
+    .player-card.recommended { border-color: var(--accent); }
+    .rec-tag {
+      position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: #fff;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 3px 12px; border-radius: 0 0 8px 8px;
+      white-space: nowrap;
+    }
+    .player-card-header { padding-top: 16px; margin-bottom: 20px; }
+    .player-name { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+    .player-meta { font-size: 13px; color: var(--text-muted); }
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px; text-align: left;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-muted); }
+    .stat-val { font-weight: 600; }
+    .stat-good { color: var(--green); }
+    .stat-warn { color: var(--yellow); }
+    .stat-bad { color: var(--red); }
+
+    /* ── Reasoning panel ── */
+    .reasoning-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 24px;
+    }
+    .reasoning-panel h3 { margin-bottom: 18px; font-size: 16px; }
+    .factor-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .factor-row:last-child { border-bottom: none; }
+    .factor-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; margin-top: 1px;
+    }
+    .factor-icon.green { background: var(--green-soft); }
+    .factor-icon.yellow { background: var(--yellow-soft); }
+    .factor-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .factor-desc { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+
+    /* ── Flip notice ── */
+    .flip-notice {
+      background: var(--yellow-soft);
+      border: 1px solid rgba(180, 83, 9, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px; color: var(--yellow);
+      margin-top: 16px; line-height: 1.45;
+    }
+    .flip-notice strong { color: var(--yellow); }
+
+    /* ── Buttons ── */
+    .cta-row { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      padding: 12px 24px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-primary:hover { background: var(--accent-bright); opacity: 1; }
+    .btn-secondary {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); border-radius: var(--radius-sm);
+      padding: 12px 20px; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* ── Confirmation screen ── */
+    .confirm-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .confirm-card {
+      text-align: center; max-width: 480px; width: 100%;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 48px 40px;
+    }
+    .confirm-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 20px;
+    }
+    .confirm-icon.green { background: var(--green-soft); }
+    .confirm-icon.yellow { background: var(--yellow-soft); }
+    .confirm-card h2 { font-size: 22px; margin-bottom: 10px; }
+    .confirm-card p { color: var(--text-muted); font-size: 15px; line-height: 1.55; margin-bottom: 28px; }
+    .confirm-note {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 16px;
+      font-size: 13px; color: var(--text-muted); margin-bottom: 28px;
+    }
+
+    /* ── Home resolved state ── */
+    .week-summary {
+      position: relative;
+      background: var(--green-soft);
+      border: 1px solid rgba(4, 120, 87, 0.22);
+      border-radius: var(--radius);
+      padding: 16px 44px 16px 20px;
+      margin-bottom: 24px;
+      font-size: 14px; color: var(--green);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .week-summary.is-dismissed { display: none; }
+    .week-dismiss {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: rgba(0,0,0,0.05);
+      color: var(--green);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.85;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .week-dismiss:hover { background: rgba(0,0,0,0.08); opacity: 1; }
+    .week-dismiss:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    .week-summary-restore-wrap { margin-bottom: 20px; margin-top: -12px; }
+    .week-summary-restore-wrap.is-hidden { display: none; }
+
+    /* ── Page disclaimer & collapsibles ── */
+    .page-disclaimer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      max-width: 640px;
+    }
+    .collapsible-hint {
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 16px;
+      background: var(--surface);
+    }
+    .collapsible-hint summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 14px 0;
+      list-style: none;
+    }
+    .collapsible-hint summary::-webkit-details-marker { display: none; }
+    .collapsible-hint summary::before { content: "▸ "; color: var(--text-dim); }
+    .collapsible-hint[open] summary::before { content: "▾ "; }
+    .collapsible-hint .hint-body {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      padding-bottom: 16px;
+    }
+    .collapsible-hint .hint-body strong { color: var(--text); }
+
+    /* ── Record badge ── */
+    .record-badge { display: flex; gap: 8px; align-items: center; }
+    .record-num { font-size: 22px; font-weight: 700; }
+    .record-label {
+      font-size: 11px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.3;
+    }
+    .record-divider { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+
+    /* ── Matchup card ── */
+    .matchup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 0;
+    }
+    .matchup-side {
+      flex: 1;
+      min-width: 0;
+    }
+    .matchup-side.you { text-align: left; }
+    .matchup-side.opp { text-align: right; }
+    .matchup-side-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .matchup-side.opp .matchup-side-inner {
+      flex-direction: row-reverse;
+      justify-content: flex-start;
+    }
+    .matchup-side.you .matchup-side-inner {
+      justify-content: flex-start;
+    }
+    .matchup-logo-wrap {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      background: var(--surface-2);
+    }
+    .matchup-logo-wrap img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .matchup-copy { min-width: 0; }
+    .matchup-side.opp .matchup-copy { text-align: right; }
+    .matchup-team { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+    .matchup-logo-caption {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+    .matchup-proj { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .matchup-proj-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+    .matchup-record { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .matchup-divider {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 0 24px; flex-shrink: 0;
+    }
+    .matchup-vs {
+      font-size: 11px; font-weight: 800; letter-spacing: 1px;
+      color: var(--text-dim); text-transform: uppercase;
+    }
+    .matchup-edge {
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px; line-height: 1.45;
+      margin-bottom: 24px;
+    }
+    .matchup-edge.green {
+      background: var(--green-soft);
+      border: 1px solid rgba(4, 120, 87, 0.22);
+      color: var(--green);
+    }
+    .matchup-edge.yellow {
+      background: var(--yellow-soft);
+      border: 1px solid rgba(180, 83, 9, 0.22);
+      color: var(--yellow);
+    }
+    .matchup-edge.red {
+      background: var(--red-soft);
+      border: 1px solid rgba(220, 38, 38, 0.22);
+      color: var(--red);
+    }
+    /* Opponent roster strip on decision screens */
+    .opp-strip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px;
+    }
+    .opp-strip-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; color: var(--text-dim);
+      white-space: nowrap; padding-top: 1px;
+    }
+    .opp-strip-body { color: var(--text-muted); line-height: 1.5; }
+    .opp-strip-body strong { color: var(--text); }
+    /* Strategy context note */
+    .strategy-note {
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font-size: 13px; line-height: 1.45;
+      margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .strategy-note.green {
+      background: var(--green-soft);
+      border: 1px solid rgba(4, 120, 87, 0.22);
+      color: var(--green);
+    }
+    .strategy-note.yellow {
+      background: var(--yellow-soft);
+      border: 1px solid rgba(180, 83, 9, 0.22);
+      color: var(--yellow);
+    }
+
+    /* ── Spacers ── */
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-32 { margin-top: 32px; }
+    .mb-4 { margin-bottom: 4px; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 1 · HOME (2 open decisions)
+════════════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <nav>
+    <div class="nav-brand">
+      <div class="dot"></div>
+      Fantasy Advisor
+    </div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <div class="advisor-message" id="advisor-banner-home" tabindex="-1">
+      <button type="button" class="advisor-dismiss" onclick="dismissAdvisorBanner('advisor-banner-home')" aria-label="Dismiss this message">×</button>
+      <div class="advisor-text">
+        <p>
+          <strong>Hey Hummus.</strong> You've got <strong>2 lineup decisions</strong> to handle before Sunday.
+          Your starters at QB, WR1, WR2, TE, K, and D/ST are solid — no action needed there.
+          Let's sort out your flex and RB2.
+        </p>
+        <p>
+          <strong>You're favored by ~14 pts.</strong> Floor plays are fine this week — you don't need to chase upside to win. Prioritize the safer option when it's close.
+        </p>
+      </div>
+    </div>
+    <div id="advisor-restore-wrap" class="advisor-restore-wrap is-hidden">
+      <button type="button" class="link-restore" onclick="restoreAdvisorBanner()">Show advisor message</button>
+    </div>
+
+    <!-- Matchup this week (team logos = mock ESPN-style avatars) -->
+    <div class="matchup-card">
+      <div class="matchup-side you">
+        <div class="matchup-side-inner">
+          <div class="matchup-logo-wrap" title="Hummus FC — custom logo (placeholder dog)">
+            <img
+              class="matchup-logo-img"
+              src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&amp;fit=crop&amp;w=128&amp;h=128&amp;q=80"
+              alt=""
+              width="56"
+              height="56"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="matchup-copy">
+            <div class="matchup-team">Hummus FC</div>
+            <div class="matchup-logo-caption">Your team · ESPN</div>
+            <div class="matchup-proj-label">Projected</div>
+            <div class="matchup-proj" style="color:var(--green);">128</div>
+            <div class="matchup-record">6–2 · 3rd in league</div>
+          </div>
+        </div>
+      </div>
+      <div class="matchup-divider">
+        <div class="matchup-vs">vs</div>
+      </div>
+      <div class="matchup-side opp">
+        <div class="matchup-side-inner">
+          <div class="matchup-logo-wrap" title="Dawg Pound FC — custom logo (placeholder dog)">
+            <img
+              class="matchup-logo-img"
+              src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&amp;fit=crop&amp;w=128&amp;h=128&amp;q=80"
+              alt=""
+              width="56"
+              height="56"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="matchup-copy">
+            <div class="matchup-team">Dawg Pound FC</div>
+            <div class="matchup-logo-caption">Opponent · ESPN</div>
+            <div class="matchup-proj-label">Projected</div>
+            <div class="matchup-proj" style="color:var(--text-muted);">114</div>
+            <div class="matchup-record">4–4 · 6th in league</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opponent context -->
+    <div class="opp-strip" style="margin-bottom:28px;">
+      <div class="opp-strip-label">Their roster</div>
+      <div class="opp-strip-body">
+        <strong>Dawg Pound FC</strong> is starting Josh Allen, Davante Adams, and Derrick Henry — all active. Their projected 114 assumes Henry plays a full load. <strong>No major injuries on their side</strong>, so their number is stable. Your floor of ~120 clears them comfortably.
+      </div>
+    </div>
+
+    <details class="collapsible-hint underdog-preview">
+      <summary>What if you're the underdog?</summary>
+      <div class="hint-body">
+        When projections have you <strong>trailing</strong>, the advisor weights <strong>ceiling</strong> and game script more than floor — you might see “swing for upside” on close calls. That’s intentional. In the real app, this flips automatically from live projections; this screen is showing a <strong>favored</strong> week.
+      </div>
+    </details>
+
+    <div class="section-header">
+      <h2>Decisions this week</h2>
+      <span class="muted" style="font-size:13px;">2 open · 0 resolved</span>
+    </div>
+
+    <!-- FLEX decision card -->
+    <div class="decision-card" role="button" tabindex="0"
+      onclick="goTo('screen-flex-decision')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goTo('screen-flex-decision');}">
+      <div class="decision-left">
+        <div class="decision-spot">FLEX</div>
+        <!-- stacked avatars: Waddle + Kupp -->
+        <div class="decision-avatars">
+          <div class="player-photo" style="width:30px;height:30px;border:2px solid var(--surface);">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/4360310.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials" style="font-size:10px;">JW</span>
+          </div>
+          <div class="player-photo" style="width:30px;height:30px;border:2px solid var(--surface);margin-left:-8px;">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/16737.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials" style="font-size:10px;">CK</span>
+          </div>
+        </div>
+        <div>
+          <div class="decision-title">Jaylen Waddle vs. Cooper Kupp</div>
+          <div class="decision-sub">Both healthy · Diverging matchup quality</div>
+        </div>
+      </div>
+      <div class="decision-right">
+        <div class="decision-urgency urgency-open">Needs decision</div>
+        <div class="decision-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- RB2 decision card -->
+    <div class="decision-card" role="button" tabindex="0"
+      onclick="goTo('screen-rb2-decision')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goTo('screen-rb2-decision');}">
+      <div class="decision-left">
+        <div class="decision-spot">RB2</div>
+        <!-- stacked avatars: Jones + Akers -->
+        <div class="decision-avatars">
+          <div class="player-photo" style="width:30px;height:30px;border:2px solid var(--surface);">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054220.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials" style="font-size:10px;">AJ</span>
+          </div>
+          <div class="player-photo" style="width:30px;height:30px;border:2px solid var(--surface);margin-left:-8px;">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/4239996.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials" style="font-size:10px;">CA</span>
+          </div>
+        </div>
+        <div>
+          <div class="decision-title">Aaron Jones vs. Cam Akers</div>
+          <div class="decision-sub">Jones questionable · Akers seeing more snaps</div>
+        </div>
+      </div>
+      <div class="decision-right">
+        <div class="decision-urgency urgency-open">Needs decision</div>
+        <div class="decision-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- Roster health -->
+    <div class="mt-32">
+      <div class="section-header">
+        <h2>Roster health</h2>
+        <span class="muted" style="font-size:13px;">Week 9</span>
+      </div>
+      <div class="card">
+
+        <div class="roster-row">
+          <span class="roster-pos">QB</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3916387.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">LJ</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Lamar Jackson</div>
+            <div class="roster-team">Baltimore Ravens</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">RB1</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054211.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">CM</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Christian McCaffrey</div>
+            <div class="roster-team">San Francisco 49ers</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div
+          class="roster-row roster-row--interactive"
+          role="button"
+          tabindex="0"
+          aria-label="Aaron Jones, questionable. View injury status."
+          onclick="openStatusPanel('jones')"
+          onkeydown="rosterRowKey(event, function(){ openStatusPanel('jones'); })"
+        >
+          <span class="roster-pos">RB2</span>
+          <div class="player-photo player-photo-sm ring-yellow">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054220.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">AJ</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Aaron Jones</div>
+            <div class="roster-team">Minnesota Vikings</div>
+          </div>
+          <div class="roster-row-right">
+            <div class="roster-status">
+              <div class="status-dot status-yellow"></div>
+              <span class="status-label yellow">Questionable</span>
+            </div>
+            <div class="roster-row-affordance" aria-hidden="true">
+              <span>View status</span>
+              <span class="roster-row-affordance-chevron">›</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">WR1</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054245.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">TH</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Tyreek Hill</div>
+            <div class="roster-team">Miami Dolphins</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">WR2</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/2576336.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">SD</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Stefon Diggs</div>
+            <div class="roster-team">Buffalo Bills</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">TE</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/15847.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">TK</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Travis Kelce</div>
+            <div class="roster-team">Kansas City Chiefs</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div
+          class="roster-row roster-row--interactive"
+          role="button"
+          tabindex="0"
+          aria-label="Flex spot open. Open Waddle versus Kupp decision."
+          onclick="goTo('screen-flex-decision')"
+          onkeydown="rosterRowKey(event, function(){ goTo('screen-flex-decision'); })"
+        >
+          <span class="roster-pos">FLEX</span>
+          <div class="player-photo player-photo-sm ring-yellow" style="background:var(--surface-2);border-style:dashed;">
+            <span class="initials" style="font-size:16px;">?</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name" style="color:var(--text-muted);">Deciding now…</div>
+            <div class="roster-team">Waddle vs. Kupp</div>
+          </div>
+          <div class="roster-row-right">
+            <div class="roster-status">
+              <div class="status-dot status-yellow"></div>
+              <span class="status-label yellow">Open</span>
+            </div>
+            <div class="roster-row-affordance" aria-hidden="true">
+              <span>Open decision</span>
+              <span class="roster-row-affordance-chevron">›</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <details class="collapsible-hint mt-24">
+      <summary>Bench & injured reserve</summary>
+      <div class="hint-body">
+        <strong>Bench:</strong> Jared Goff, Brian Robinson Jr., Romeo Doubs, Dalton Schultz · <strong>IR:</strong> J.K. Dobbins (out for season). None of these change this week’s starter decisions unless you get late scratch news — we’ll flag that in the real app.
+      </div>
+    </details>
+
+    <!-- Season record -->
+    <div class="mt-24">
+      <div class="card card-sm" style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="label mb-8">Season record</div>
+          <div class="record-badge">
+            <div>
+              <div class="record-num" style="color:var(--green)">6</div>
+              <div class="record-label">Wins</div>
+            </div>
+            <div class="record-divider"></div>
+            <div>
+              <div class="record-num" style="color:var(--red)">2</div>
+              <div class="record-label">Losses</div>
+            </div>
+            <div class="record-divider"></div>
+            <div>
+              <div class="record-num" style="color:var(--text-muted)">3rd</div>
+              <div class="record-label">In league</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label mb-8">Avg points / week</div>
+          <div style="font-size:22px;font-weight:700;">128.4</div>
+          <div style="font-size:12px;color:var(--text-muted);">+4.2 vs league avg</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="page-disclaimer">
+      Recommendations blend projections and injury news as of the <strong>Last updated</strong> time in the header. Always confirm starters and official designations in <strong>ESPN</strong> before lock.
+    </p>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 2 · FLEX DECISION (Waddle vs Kupp)
+════════════════════════════════════════════════ -->
+<div id="screen-flex-decision" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+
+  <div class="page page-narrow">
+    <button class="back-btn" onclick="goTo('screen-home')">← Back to this week</button>
+
+    <div class="decision-header">
+      <div class="label mb-8">Flex spot · Week 9</div>
+      <h1>Waddle or Kupp?</h1>
+      <p class="mt-8">Both are healthy. Here's how I see it.</p>
+    </div>
+
+    <div class="two-col">
+
+      <!-- Waddle — recommended -->
+      <div class="player-card recommended">
+        <div class="rec-tag">★ MY PICK</div>
+        <div class="player-card-header">
+          <div class="player-photo player-photo-lg ring-green" style="border-width:3px;">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/4360310.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">JW</span>
+          </div>
+          <div class="player-name">Jaylen Waddle</div>
+          <div class="player-meta">WR · Miami Dolphins</div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Matchup</span>
+          <span class="stat-val stat-good">vs NE (#31 vs WR)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Target share</span>
+          <span class="stat-val">26% (last 4 wks)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Game total</span>
+          <span class="stat-val stat-good">48.5 pts (high)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Weather</span>
+          <span class="stat-val stat-good">Dome / no risk</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Proj. points</span>
+          <span class="stat-val">16.8</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-val stat-good">Active</span>
+        </div>
+      </div>
+
+      <!-- Kupp -->
+      <div class="player-card">
+        <div class="player-card-header" style="padding-top:0;">
+          <div class="player-photo player-photo-lg" style="border-width:3px;">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/16737.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">CK</span>
+          </div>
+          <div class="player-name">Cooper Kupp</div>
+          <div class="player-meta">WR · Los Angeles Rams</div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Matchup</span>
+          <span class="stat-val stat-warn">vs SEA (#12 vs WR)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Target share</span>
+          <span class="stat-val">29% (last 4 wks)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Game total</span>
+          <span class="stat-val stat-warn">44.0 pts (avg)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Weather</span>
+          <span class="stat-val stat-good">Clear / mild</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Proj. points</span>
+          <span class="stat-val">13.2</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-val stat-good">Active</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="reasoning-panel">
+      <h3>Why I'm going with Waddle</h3>
+      <div class="factor-row">
+        <div class="factor-icon green">🎯</div>
+        <div>
+          <div class="factor-title">Elite matchup</div>
+          <div class="factor-desc">New England ranks dead last vs WRs this season. Waddle gets shadow coverage occasionally, but NE has surrendered 30+ to receivers 4 of last 6 weeks.</div>
+        </div>
+      </div>
+      <div class="factor-row">
+        <div class="factor-icon green">📈</div>
+        <div>
+          <div class="factor-title">High game total</div>
+          <div class="factor-desc">MIA-NE implied total is 48.5 — Miami projected to score 27+. More scoring drives = more Waddle targets.</div>
+        </div>
+      </div>
+      <div class="factor-row">
+        <div class="factor-icon yellow">⚖️</div>
+        <div>
+          <div class="factor-title">Kupp has better target share</div>
+          <div class="factor-desc">Kupp runs 29% of targets vs Waddle's 26%. That's the only edge Kupp holds — but a tougher matchup and lower game total discount it.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opponent context -->
+    <div class="opp-strip">
+      <div class="opp-strip-label">Their roster</div>
+      <div class="opp-strip-body">
+        <strong>Dawg Pound FC</strong> projects ~114 pts this week. Their WR corps is healthy — Davante Adams and A.J. Brown both active. No injuries on their side change the number meaningfully.
+      </div>
+    </div>
+
+    <div class="strategy-note green">
+      ✓ <strong>You're favored by ~14 pts</strong> — floor plays are fine here. Both Waddle and Kupp clear your needed threshold. This decision is about confidence, not desperation upside.
+    </div>
+
+    <div class="flip-notice">
+      <strong>What would change this:</strong> If MIA's game total drops below 44 or Tua is ruled out, Kupp becomes the safer floor play.
+    </div>
+
+    <div class="cta-row">
+      <button class="btn-primary" onclick="goTo('screen-flex-confirm')">✓ Start Waddle — I agree</button>
+      <button class="btn-secondary" onclick="goTo('screen-flex-override')">I'm going with Kupp anyway</button>
+    </div>
+
+    <p class="page-disclaimer">
+      Recommendations blend projections and injury news as of the <strong>Last updated</strong> time in the header. Always confirm starters and official designations in <strong>ESPN</strong> before lock.
+    </p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 3a · FLEX CONFIRMED (Waddle)
+════════════════════════════════════════════════ -->
+<div id="screen-flex-confirm" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+  <div class="page confirm-wrap">
+    <div class="confirm-card">
+      <div class="confirm-icon green">✓</div>
+      <h2>Waddle locked in at flex.</h2>
+      <p>Good call. Let's move to your RB2 — that one needs attention too, especially with Jones listed questionable.</p>
+      <div class="confirm-note">
+        📌 Confirm Sunday actives before 11:45 AM ET in case something changes.
+      </div>
+      <button class="btn-primary" onclick="goTo('screen-rb2-decision')" style="width:100%;">
+        → Next: Sort out RB2
+      </button>
+      <br><br>
+      <button class="btn-secondary" onclick="goTo('screen-home')" style="width:100%;">
+        Back to home first
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 3b · FLEX OVERRIDDEN (Kupp)
+════════════════════════════════════════════════ -->
+<div id="screen-flex-override" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+  <div class="page confirm-wrap">
+    <div class="confirm-card">
+      <div class="confirm-icon yellow">👊</div>
+      <h2>Kupp it is. Your call.</h2>
+      <p>Noted — you went with Kupp over my pick. I'll track how this plays out. Let's handle RB2 next.</p>
+      <div class="confirm-note">
+        📌 Confirm Sunday actives before 11:45 AM ET in case Jones's status changes.
+      </div>
+      <button class="btn-primary" onclick="goTo('screen-rb2-decision')" style="width:100%;">
+        → Next: Sort out RB2
+      </button>
+      <br><br>
+      <button class="btn-secondary" onclick="goTo('screen-home')" style="width:100%;">
+        Back to home first
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 4 · RB2 DECISION (Jones vs Akers)
+════════════════════════════════════════════════ -->
+<div id="screen-rb2-decision" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+
+  <div class="page page-narrow">
+    <button class="back-btn" onclick="goTo('screen-home')">← Back to this week</button>
+
+    <div class="decision-header">
+      <div class="label mb-8">RB2 spot · Week 9</div>
+      <h1>Jones or Akers?</h1>
+      <p class="mt-8">Jones is questionable. Here's the real picture.</p>
+    </div>
+
+    <div class="two-col">
+
+      <!-- Jones -->
+      <div class="player-card">
+        <div class="player-card-header" style="padding-top:0;">
+          <div class="player-photo player-photo-lg ring-yellow" style="border-width:3px;">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054220.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">AJ</span>
+          </div>
+          <div class="player-name">Aaron Jones</div>
+          <div class="player-meta">RB · Minnesota Vikings</div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-val stat-warn">Questionable (knee)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Matchup</span>
+          <span class="stat-val stat-good">vs CHI (#28 vs RB)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Snap share</span>
+          <span class="stat-val">61% (when healthy)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Game total</span>
+          <span class="stat-val">43.5 pts</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Proj. points</span>
+          <span class="stat-val stat-warn">9.4 (risk-adj.)</span>
+        </div>
+      </div>
+
+      <!-- Akers — recommended -->
+      <div class="player-card recommended">
+        <div class="rec-tag">★ MY PICK</div>
+        <div class="player-card-header">
+          <div class="player-photo player-photo-lg ring-green" style="border-width:3px;">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/4239996.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">CA</span>
+          </div>
+          <div class="player-name">Cam Akers</div>
+          <div class="player-meta">RB · Houston Texans</div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-val stat-good">Active</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Matchup</span>
+          <span class="stat-val stat-warn">vs KC (#9 vs RB)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Snap share</span>
+          <span class="stat-val stat-good">↑ 72% last 2 wks</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Game total</span>
+          <span class="stat-val stat-good">47.5 pts</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Proj. points</span>
+          <span class="stat-val">12.1</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="reasoning-panel">
+      <h3>Why I'm going with Akers</h3>
+      <div class="factor-row">
+        <div class="factor-icon yellow">🩹</div>
+        <div>
+          <div class="factor-title">Jones's injury risk is real</div>
+          <div class="factor-desc">A "questionable" knee for a running back typically means limited practice. Even if he plays, his snap share and load may be capped. The risk-adjusted projection drops to ~9 pts.</div>
+        </div>
+      </div>
+      <div class="factor-row">
+        <div class="factor-icon green">📊</div>
+        <div>
+          <div class="factor-title">Akers trending up fast</div>
+          <div class="factor-desc">His snap share jumped from 44% to 72% over the last two weeks. When a back's role expands that quickly, it tends to stick. That usage is worth backing.</div>
+        </div>
+      </div>
+      <div class="factor-row">
+        <div class="factor-icon green">🏟️</div>
+        <div>
+          <div class="factor-title">Better game environment</div>
+          <div class="factor-desc">HOU-KC has a higher total (47.5) and Akers's recent role suggests he'll carry the ball on early downs even in a pass-heavy game script.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opponent context -->
+    <div class="opp-strip">
+      <div class="opp-strip-label">Their roster</div>
+      <div class="opp-strip-body">
+        <strong>Dawg Pound FC</strong> projects ~114 pts. Their RBs are Derrick Henry (active, full practice) and a handcuff backup — no surprises. Their number is locked in and unlikely to drop.
+      </div>
+    </div>
+
+    <div class="strategy-note green">
+      ✓ <strong>You're favored by ~14 pts</strong> — the safe play wins here too. Akers at 12 projected beats the threshold. Starting Jones with injury risk isn't worth it when you don't need the ceiling.
+    </div>
+
+    <div class="flip-notice">
+      <strong>What would change this:</strong> If Jones is upgraded to Active by Saturday's injury report, his matchup vs. Chicago makes him a strong pivot. Check the 4:30 PM ET report Saturday.
+    </div>
+
+    <div class="cta-row">
+      <button class="btn-primary" onclick="goTo('screen-rb2-confirm')">✓ Start Akers — I agree</button>
+      <button class="btn-secondary" onclick="goTo('screen-rb2-override')">I'll wait on Jones</button>
+    </div>
+
+    <p class="page-disclaimer">
+      Recommendations blend projections and injury news as of the <strong>Last updated</strong> time in the header. Always confirm starters and official designations in <strong>ESPN</strong> before lock.
+    </p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 5a · RB2 CONFIRMED (Akers)
+════════════════════════════════════════════════ -->
+<div id="screen-rb2-confirm" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+  <div class="page confirm-wrap">
+    <div class="confirm-card">
+      <div class="confirm-icon green">✓</div>
+      <h2>All done. Lineup is set.</h2>
+      <p>Akers at RB2. Both decisions handled — you're in good shape for Sunday. Nothing else needs your attention right now.</p>
+      <div class="confirm-note">
+        📌 One reminder: check the Saturday 4:30 PM ET injury report for Jones's status in case anything shifts.
+      </div>
+      <button class="btn-primary" onclick="goTo('screen-home-done')" style="width:100%;">
+        → Back to home
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 5b · RB2 OVERRIDE (waiting on Jones)
+════════════════════════════════════════════════ -->
+<div id="screen-rb2-override" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+  <div class="page confirm-wrap">
+    <div class="confirm-card">
+      <div class="confirm-icon yellow">⏳</div>
+      <h2>Waiting on Jones. Got it.</h2>
+      <p>Makes sense to hold until the Saturday report. Come back once his status is confirmed — if he's ruled out, Akers is the clear start. If he's active, reassess his expected snap share.</p>
+      <div class="confirm-note">
+        📌 Check back Saturday evening after the 4:30 PM ET injury report.
+      </div>
+      <button class="btn-primary" onclick="goTo('screen-home-done')" style="width:100%;">
+        → Back to home
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 6 · HOME (all decisions resolved)
+════════════════════════════════════════════════ -->
+<div id="screen-home-done" class="screen">
+  <nav>
+    <div class="nav-brand"><div class="dot"></div>Fantasy Advisor</div>
+    <div class="nav-meta">
+      <div class="nav-updated" title="Roster & projections sync on load; live app will refresh on a schedule">Last updated 11:42 AM ET</div>
+      <div class="nav-league">ESPN · Gridiron Gurus · Week 9</div>
+      <div class="lock-badge">Sun lock 1:00 PM ET</div>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <div class="week-summary" id="week-summary-done" tabindex="-1">
+      <button type="button" class="week-dismiss" onclick="dismissWeekSummary()" aria-label="Dismiss this message">×</button>
+      ✓ All decisions handled for Week 9. <strong>You're favored by ~14 pts</strong> — lineup is set; floor plays were the right call. Check back after Sunday's games or if news breaks on Jones.
+    </div>
+    <div id="week-summary-restore-wrap" class="week-summary-restore-wrap is-hidden">
+      <button type="button" class="link-restore" onclick="restoreWeekSummary()">Show week summary</button>
+    </div>
+
+    <!-- Matchup this week -->
+    <div class="matchup-card">
+      <div class="matchup-side you">
+        <div class="matchup-side-inner">
+          <div class="matchup-logo-wrap" title="Hummus FC — custom logo (placeholder dog)">
+            <img
+              class="matchup-logo-img"
+              src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&amp;fit=crop&amp;w=128&amp;h=128&amp;q=80"
+              alt=""
+              width="56"
+              height="56"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="matchup-copy">
+            <div class="matchup-team">Hummus FC</div>
+            <div class="matchup-logo-caption">Your team · ESPN</div>
+            <div class="matchup-proj-label">Projected</div>
+            <div class="matchup-proj" style="color:var(--green);">128</div>
+            <div class="matchup-record">6–2 · 3rd in league</div>
+          </div>
+        </div>
+      </div>
+      <div class="matchup-divider">
+        <div class="matchup-vs">vs</div>
+      </div>
+      <div class="matchup-side opp">
+        <div class="matchup-side-inner">
+          <div class="matchup-logo-wrap" title="Dawg Pound FC — custom logo (placeholder dog)">
+            <img
+              class="matchup-logo-img"
+              src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&amp;fit=crop&amp;w=128&amp;h=128&amp;q=80"
+              alt=""
+              width="56"
+              height="56"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="matchup-copy">
+            <div class="matchup-team">Dawg Pound FC</div>
+            <div class="matchup-logo-caption">Opponent · ESPN</div>
+            <div class="matchup-proj-label">Projected</div>
+            <div class="matchup-proj" style="color:var(--text-muted);">114</div>
+            <div class="matchup-record">4–4 · 6th in league</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2>Decisions this week</h2>
+      <span class="muted" style="font-size:13px;">2 resolved</span>
+    </div>
+
+    <div class="decision-card resolved">
+      <div class="decision-left">
+        <div class="decision-spot">FLEX</div>
+        <div>
+          <div class="decision-title">Jaylen Waddle vs. Cooper Kupp</div>
+          <div class="decision-sub">Waddle starting</div>
+        </div>
+      </div>
+      <div class="decision-right">
+        <div class="decision-urgency urgency-done">Done</div>
+      </div>
+    </div>
+
+    <div class="decision-card resolved">
+      <div class="decision-left">
+        <div class="decision-spot">RB2</div>
+        <div>
+          <div class="decision-title">Aaron Jones vs. Cam Akers</div>
+          <div class="decision-sub">Decision locked · Check Sat injury report</div>
+        </div>
+      </div>
+      <div class="decision-right">
+        <div class="decision-urgency urgency-done">Done</div>
+      </div>
+    </div>
+
+    <div class="mt-32">
+      <div class="section-header">
+        <h2>Roster health</h2>
+        <span class="muted" style="font-size:13px;">Week 9</span>
+      </div>
+      <div class="card">
+
+        <div class="roster-row">
+          <span class="roster-pos">QB</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3916387.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">LJ</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Lamar Jackson</div>
+            <div class="roster-team">Baltimore Ravens</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">RB1</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054211.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">CM</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Christian McCaffrey</div>
+            <div class="roster-team">San Francisco 49ers</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">RB2</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/4239996.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">CA</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Cam Akers</div>
+            <div class="roster-team">Houston Texans</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">WR1</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3054245.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">TH</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Tyreek Hill</div>
+            <div class="roster-team">Miami Dolphins</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">WR2</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/2576336.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">SD</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Stefon Diggs</div>
+            <div class="roster-team">Buffalo Bills</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">FLEX</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/4360310.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">JW</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Jaylen Waddle</div>
+            <div class="roster-team">Miami Dolphins</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <span class="roster-pos">TE</span>
+          <div class="player-photo player-photo-sm ring-green">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/15847.png" alt="" onload="this.closest('.player-photo').classList.add('has-photo')" onerror="this.style.display='none'" />
+            <span class="initials">TK</span>
+          </div>
+          <div class="roster-info">
+            <div class="roster-name">Travis Kelce</div>
+            <div class="roster-team">Kansas City Chiefs</div>
+          </div>
+          <div class="roster-status">
+            <div class="status-dot status-green"></div>
+            <span class="status-label green">Active</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <details class="collapsible-hint mt-24">
+      <summary>Bench & injured reserve</summary>
+      <div class="hint-body">
+        <strong>Bench:</strong> Jared Goff, Brian Robinson Jr., Romeo Doubs, Dalton Schultz · <strong>IR:</strong> J.K. Dobbins (out for season). None of these change this week’s starter decisions unless you get late scratch news — we’ll flag that in the real app.
+      </div>
+    </details>
+
+    <div class="mt-24">
+      <div class="card card-sm" style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="label mb-8">Season record</div>
+          <div class="record-badge">
+            <div>
+              <div class="record-num" style="color:var(--green)">6</div>
+              <div class="record-label">Wins</div>
+            </div>
+            <div class="record-divider"></div>
+            <div>
+              <div class="record-num" style="color:var(--red)">2</div>
+              <div class="record-label">Losses</div>
+            </div>
+            <div class="record-divider"></div>
+            <div>
+              <div class="record-num" style="color:var(--text-muted)">3rd</div>
+              <div class="record-label">In league</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label mb-8">Avg points / week</div>
+          <div style="font-size:22px;font-weight:700;">128.4</div>
+          <div style="font-size:12px;color:var(--text-muted);">+4.2 vs league avg</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="page-disclaimer">
+      Recommendations blend projections and injury news as of the <strong>Last updated</strong> time in the header. Always confirm starters and official designations in <strong>ESPN</strong> before lock.
+    </p>
+
+  </div>
+</div>
+
+<!-- Injury / status panel (mock — Aaron Jones) -->
+<div
+  id="status-panel-backdrop"
+  class="status-panel-backdrop is-hidden"
+  onclick="if (event.target === this) closeStatusPanel();"
+>
+  <div
+    class="status-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="status-panel-title"
+    onclick="event.stopPropagation();"
+  >
+    <button type="button" class="status-panel-close" onclick="closeStatusPanel()" aria-label="Close">×</button>
+    <div class="status-tag">Questionable</div>
+    <h2 id="status-panel-title">Aaron Jones</h2>
+    <div class="status-meta">RB · Minnesota Vikings · Week 9 · Last updated matches header</div>
+    <p class="status-block">
+      <strong>Reported injury:</strong> Knee — limited in practice Wednesday and Thursday; full participant Friday (mock).
+    </p>
+    <p class="status-block">
+      <strong>Game:</strong> Sun 1:00 PM ET vs Chicago. <strong>Implied role if active:</strong> Lead back with normal snap share in a strong matchup.
+    </p>
+    <p class="status-block">
+      <strong>What we’re watching:</strong> Final designation by Sat 4:30 PM ET inactives. If Jones is active but limited, Cam Akers becomes the safer RB2 play — same as the decision card recommends.
+    </p>
+    <div class="status-panel-footer">
+      Confirm official status in ESPN before lock. This panel is mock content for the prototype.
+    </div>
+    <div class="cta-row" style="margin-top:16px;margin-bottom:0;">
+      <button type="button" class="btn-primary" onclick="closeStatusPanel(); goTo('screen-rb2-decision');">
+        Go to RB2 decision
+      </button>
+      <button type="button" class="btn-secondary" onclick="closeStatusPanel()">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function rosterRowKey(e, fn) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fn();
+    }
+  }
+
+  function openStatusPanel(id) {
+    if (id !== 'jones') return;
+    var bd = document.getElementById('status-panel-backdrop');
+    if (!bd) return;
+    bd.classList.remove('is-hidden');
+    document.body.style.overflow = 'hidden';
+    var btn = bd.querySelector('.status-panel-close');
+    if (btn) {
+      setTimeout(function () {
+        try {
+          btn.focus();
+        } catch (err) {}
+      }, 0);
+    }
+  }
+
+  function closeStatusPanel() {
+    var bd = document.getElementById('status-panel-backdrop');
+    if (bd) {
+      bd.classList.add('is-hidden');
+      document.body.style.overflow = '';
+    }
+  }
+
+  function isStatusPanelOpen() {
+    var bd = document.getElementById('status-panel-backdrop');
+    return bd && !bd.classList.contains('is-hidden');
+  }
+
+  function goTo(screenId) {
+    closeStatusPanel();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function dismissAdvisorBanner(bannerId) {
+    var el = document.getElementById(bannerId);
+    if (el) {
+      el.classList.add('is-dismissed');
+      try {
+        sessionStorage.setItem('fa-advisor-banner-dismissed', '1');
+      } catch (e) {}
+      var rw = document.getElementById('advisor-restore-wrap');
+      if (rw) rw.classList.remove('is-hidden');
+    }
+  }
+
+  function restoreAdvisorBanner() {
+    var el = document.getElementById('advisor-banner-home');
+    if (el) {
+      el.classList.remove('is-dismissed');
+      try {
+        sessionStorage.removeItem('fa-advisor-banner-dismissed');
+      } catch (e) {}
+      var rw = document.getElementById('advisor-restore-wrap');
+      if (rw) rw.classList.add('is-hidden');
+      try {
+        el.focus();
+      } catch (err) {}
+    }
+  }
+
+  function dismissWeekSummary() {
+    var el = document.getElementById('week-summary-done');
+    if (el) {
+      el.classList.add('is-dismissed');
+      try {
+        sessionStorage.setItem('fa-week-summary-dismissed', '1');
+      } catch (e) {}
+      var rw = document.getElementById('week-summary-restore-wrap');
+      if (rw) rw.classList.remove('is-hidden');
+    }
+  }
+
+  function restoreWeekSummary() {
+    var el = document.getElementById('week-summary-done');
+    if (el) {
+      el.classList.remove('is-dismissed');
+      try {
+        sessionStorage.removeItem('fa-week-summary-dismissed');
+      } catch (e) {}
+      var rw = document.getElementById('week-summary-restore-wrap');
+      if (rw) rw.classList.add('is-hidden');
+      try {
+        el.focus();
+      } catch (err) {}
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      if (sessionStorage.getItem('fa-advisor-banner-dismissed') === '1') {
+        var b = document.getElementById('advisor-banner-home');
+        if (b) b.classList.add('is-dismissed');
+        var ar = document.getElementById('advisor-restore-wrap');
+        if (ar) ar.classList.remove('is-hidden');
+      }
+      if (sessionStorage.getItem('fa-week-summary-dismissed') === '1') {
+        var w = document.getElementById('week-summary-done');
+        if (w) w.classList.add('is-dismissed');
+        var wr = document.getElementById('week-summary-restore-wrap');
+        if (wr) wr.classList.remove('is-hidden');
+      }
+    } catch (e) {}
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (isStatusPanelOpen()) {
+      closeStatusPanel();
+      e.preventDefault();
+      return;
+    }
+    var home = document.getElementById('screen-home');
+    var done = document.getElementById('screen-home-done');
+    if (home && home.classList.contains('active')) {
+      var b = document.getElementById('advisor-banner-home');
+      if (b && !b.classList.contains('is-dismissed')) {
+        dismissAdvisorBanner('advisor-banner-home');
+        e.preventDefault();
+      }
+    }
+    if (done && done.classList.contains('active')) {
+      var w = document.getElementById('week-summary-done');
+      if (w && !w.classList.contains('is-dismissed')) {
+        dismissWeekSummary();
+        e.preventDefault();
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trip Assistant — prototype</title>
+    <style>
+      :root {
+        --bg: #f1f5f9;
+        --surface: #ffffff;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #1e293b;
+        --primary-fg: #f8fafc;
+        --radius: 1rem;
+        --radius-sm: 0.75rem;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+        --ring: #3b82f6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+        font-size: 15px;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 1.35rem 1.15rem 2.25rem;
+      }
+      header {
+        margin-bottom: 1.15rem;
+      }
+      .header-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem 1rem;
+      }
+      .header-top h1 {
+        margin: 0.2rem 0 0;
+        font-size: 1.35rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.25;
+      }
+      .eyebrow {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin: 0;
+      }
+      .sub {
+        margin: 0.45rem 0 0;
+        max-width: 38rem;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.45;
+      }
+      .header-meta {
+        margin-top: 0.45rem;
+        font-size: 0.72rem;
+        color: #94a3b8;
+      }
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.2rem;
+        padding: 0.25rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 1rem;
+      }
+      .tabs button {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 500;
+        padding: 0.38rem 0.55rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .tabs button:hover {
+        color: var(--text);
+        background: #f1f5f9;
+      }
+      .tabs button:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .tabs button[aria-selected="true"] {
+        background: #f1f5f9;
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .panel {
+        display: none;
+        animation: fade 0.14s ease;
+      }
+      .panel[aria-hidden="false"] {
+        display: block;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .panel h2 {
+        margin: 0 0 0.2rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .panel > p.lead {
+        margin: 0 0 0.75rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+        max-width: 40rem;
+        line-height: 1.45;
+      }
+
+      .grid2 {
+        display: grid;
+        gap: 0.9rem;
+      }
+      @media (min-width: 860px) {
+        .grid2 {
+          grid-template-columns: 1fr minmax(220px, 260px);
+          align-items: start;
+        }
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 0.85rem;
+        box-shadow: var(--shadow);
+      }
+      .card h3 {
+        margin: 0 0 0.35rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .card p {
+        margin: 0;
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+      .card + .card {
+        margin-top: 0.45rem;
+      }
+      .card--selected {
+        border-color: #94a3b8;
+        background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+        box-shadow: var(--shadow-md);
+      }
+      .card--ghost {
+        box-shadow: none;
+        background: #f8fafc;
+      }
+
+      .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.65rem;
+      }
+      .filter-row button {
+        font-size: 0.72rem;
+        font-weight: 500;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .filter-row button:hover {
+        border-color: #cbd5e1;
+        color: var(--text);
+      }
+      .filter-row button:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .filter-row button[data-active="true"] {
+        background: var(--primary);
+        color: var(--primary-fg);
+        border-color: var(--primary);
+      }
+      .rec-card[hidden] {
+        display: none !important;
+      }
+      .rec-card .why {
+        margin-top: 0.5rem;
+        font-size: 0.82rem;
+        color: #475569;
+        line-height: 1.45;
+      }
+      .detour {
+        float: right;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        margin-left: 0.5rem;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.55rem;
+      }
+      .tag {
+        font-size: 0.68rem;
+        padding: 0.12rem 0.45rem;
+        border-radius: 0.4rem;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        background: #fff;
+      }
+      .pill {
+        font-size: 0.62rem;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .pill--must {
+        background: #1e293b;
+        color: #f8fafc;
+      }
+      .pill--want {
+        background: #e2e8f0;
+        color: #334155;
+      }
+      .pill--maybe {
+        background: #fff;
+        border: 1px solid var(--border);
+      }
+
+      .list-compact {
+        margin: 0;
+        padding-left: 1.1rem;
+        font-size: 0.85rem;
+        color: var(--text);
+      }
+      .list-compact li {
+        margin: 0.28rem 0;
+      }
+
+      .warn {
+        border-color: #fbbf24;
+        background: linear-gradient(180deg, #fffbeb 0%, #fff 100%);
+      }
+      .ok {
+        border-color: #4ade80;
+        background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%);
+      }
+
+      aside.note {
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.45;
+        border-left: 2px solid #e2e8f0;
+        padding: 0.35rem 0 0.35rem 0.75rem;
+        background: transparent;
+      }
+      aside.note strong {
+        color: var(--text);
+      }
+
+      label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.65rem;
+        font: inherit;
+        margin-bottom: 0.75rem;
+        background: #fff;
+      }
+      input:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 0;
+        border-color: transparent;
+      }
+      textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+      .form-grid {
+        display: grid;
+        gap: 0.65rem;
+      }
+      @media (min-width: 640px) {
+        .form-grid.two {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .buckets {
+        display: grid;
+        gap: 0.45rem;
+      }
+      @media (min-width: 720px) {
+        .planner3 {
+          display: grid;
+          grid-template-columns: 175px 1fr 210px;
+          gap: 0.75rem;
+          align-items: start;
+        }
+      }
+      .bucket {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.78rem;
+      }
+      .bucket .bucket-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.45rem;
+      }
+      .bucket .bucket-head strong {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      .bucket .count {
+        font-size: 0.62rem;
+        font-weight: 600;
+        color: var(--muted);
+        background: #fff;
+        border: 1px solid var(--border);
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
+      }
+      .bucket .hint {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        margin-bottom: 0.45rem;
+      }
+      .day-pill {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.45rem;
+        margin-top: 0.65rem;
+      }
+      .btn {
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.45rem 0.75rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        cursor: default;
+        font-family: inherit;
+        color: var(--text);
+      }
+      .btn--primary {
+        background: var(--primary);
+        color: var(--primary-fg);
+        border-color: var(--primary);
+      }
+      .btn--ghost {
+        background: transparent;
+        color: var(--muted);
+      }
+      .btn:not(:disabled),
+      button.day-card {
+        cursor: pointer;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+      }
+      .header-actions button {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.55rem;
+        border-radius: 0.45rem;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .header-actions button:hover {
+        color: var(--text);
+        border-color: #cbd5e1;
+      }
+      .header-actions button:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+
+      .rec-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.55rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #f1f5f9;
+      }
+      .btn-save {
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.4rem 0.85rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: var(--primary-fg);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .btn-save:hover {
+        opacity: 0.92;
+      }
+      .btn-save:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .btn-save:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .rec-card.is-saved {
+        display: none !important;
+      }
+
+      #discover-empty {
+        display: none;
+        padding: 1rem;
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--muted);
+        border: 1px dashed #e2e8f0;
+        border-radius: var(--radius-sm);
+        background: #fafafa;
+      }
+      #discover-empty.is-visible {
+        display: block;
+      }
+
+      .route-option {
+        cursor: pointer;
+        transition: border-color 0.12s ease, box-shadow 0.12s ease;
+      }
+      .route-option:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+
+      button.day-card {
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 0.85rem;
+        background: #fff;
+        margin-top: 0.5rem;
+      }
+      button.day-card[aria-current="true"] {
+        border-color: #64748b;
+        box-shadow: var(--shadow-md);
+        background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+      }
+
+      .bucket-line {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-top: 0.35rem;
+        font-size: 0.8rem;
+      }
+      .bucket-line button.rm {
+        flex-shrink: 0;
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0 0.2rem;
+      }
+      .bucket-line button.rm:hover {
+        color: #b91c1c;
+      }
+
+      .quick-add {
+        margin-top: 0.85rem;
+        padding: 0.75rem 0.85rem;
+        border: 1px dashed #e2e8f0;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .quick-add h3 {
+        margin: 0 0 0.5rem;
+        font-size: 0.82rem;
+      }
+      .quick-add .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      @media (max-width: 560px) {
+        .quick-add .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 1.25rem;
+        right: 1.25rem;
+        max-width: 320px;
+        padding: 0.75rem 1rem;
+        font-size: 0.84rem;
+        background: var(--primary);
+        color: var(--primary-fg);
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-md);
+        z-index: 100;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: opacity 0.2s, transform 0.2s;
+      }
+      .toast.is-on {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .place-row[hidden] {
+        display: none !important;
+      }
+      .place-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+        margin-top: 0.45rem;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="header-top">
+          <div>
+            <p class="eyebrow">Trip Assistant</p>
+            <h1>Personal travel OS</h1>
+          </div>
+          <div class="header-actions">
+            <button type="button" id="btn-export" title="Copy JSON to clipboard">
+              Export
+            </button>
+            <button type="button" id="btn-reset" title="Clear saved data">
+              Reset
+            </button>
+          </div>
+        </div>
+        <p class="sub">
+          Ideas → route → saved places → days. Persists in this browser until you reset.
+        </p>
+        <p class="header-meta">Refined v1 · Personal · Desktop-first</p>
+      </header>
+
+      <div class="tabs" role="tablist" aria-label="Main sections">
+        <button type="button" role="tab" aria-selected="true" data-tab="setup" id="tab-setup">
+          Trip setup
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="discover" id="tab-discover">
+          Discover
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="routes" id="tab-routes">
+          Routes
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="stops" id="tab-stops">
+          Stops
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="places" id="tab-places">
+          Saved places
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="res" id="tab-res">
+          Reservations
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="planner" id="tab-planner">
+          Planner
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="review" id="tab-review">
+          Review
+        </button>
+      </div>
+
+      <section
+        class="panel"
+        id="panel-setup"
+        role="tabpanel"
+        aria-labelledby="tab-setup"
+        aria-hidden="false"
+      >
+        <h2>Trip setup</h2>
+        <p class="lead">Trip frame: dates, pace, transport, notes.</p>
+        <div class="form-grid two">
+          <div>
+            <label for="t-name">Trip name</label>
+            <input id="t-name" value="Croatia 2026" autocomplete="off" />
+          </div>
+          <div>
+            <label for="t-country">Country</label>
+            <input id="t-country" value="Croatia" autocomplete="off" />
+          </div>
+          <div>
+            <label for="t-dates">Dates</label>
+            <input id="t-dates" value="May 10 – May 19, 2026" autocomplete="off" />
+          </div>
+          <div>
+            <label for="t-pace">Pace</label>
+            <input id="t-pace" value="Medium" autocomplete="off" />
+          </div>
+          <div style="grid-column: 1 / -1">
+            <label for="t-transport">Transport</label>
+            <input id="t-transport" value="Car + Ferry" autocomplete="off" />
+          </div>
+          <div style="grid-column: 1 / -1">
+            <label for="t-notes">Notes</label>
+            <textarea id="t-notes">Scenic coastal towns, food, medium pace</textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-discover" role="tabpanel" aria-labelledby="tab-discover" aria-hidden="true">
+        <h2>Discover</h2>
+        <p class="lead">Filter by tag. <strong>Save to places</strong> moves the card to Saved places.</p>
+        <div class="grid2">
+          <div>
+            <div class="filter-row" id="discover-filters" aria-label="Filter by tag">
+              <button type="button" data-filter="all" data-active="true">All</button>
+              <button type="button" data-filter="scenic">Scenic</button>
+              <button type="button" data-filter="food">Food</button>
+              <button type="button" data-filter="must-see">Must-see</button>
+              <button type="button" data-filter="worth-detour">Worth-detour</button>
+              <button type="button" data-filter="low-effort">Low-effort</button>
+              <button type="button" data-filter="full-day">Full-day</button>
+            </div>
+            <div id="discover-empty">All saved — see Saved places or Reset.</div>
+            <div id="rec-list">
+              <div class="card rec-card" data-rec-id="lokrum" data-tags="scenic low-effort half-day" data-location="Dubrovnik" data-kind="Day trip" data-duration="4h">
+                <span class="detour">Low detour</span>
+                <h3>Lokrum Island</h3>
+                <p>Dubrovnik · Day trip · 4h · scenery + slower afternoon</p>
+                <p class="why">Easy island escape — botanical walks, swimming, no car needed.</p>
+                <div class="tag-row">
+                  <span class="tag">scenic</span>
+                  <span class="tag">low-effort</span>
+                  <span class="tag">half-day</span>
+                </div>
+                <div class="rec-footer">
+                  <button type="button" class="btn-save">Save to places</button>
+                </div>
+              </div>
+              <div class="card rec-card" data-rec-id="bota" data-tags="food worth-detour midday" data-location="Ston" data-kind="Restaurant" data-duration="1.5h">
+                <span class="detour">Medium detour</span>
+                <h3>Bota Šare Oyster Lunch</h3>
+                <p>Ston · Restaurant · 1.5h · food-first transit stop</p>
+                <p class="why">Renowned oysters when the coastal road passes Ston.</p>
+                <div class="tag-row">
+                  <span class="tag">food</span>
+                  <span class="tag">worth-detour</span>
+                  <span class="tag">midday</span>
+                </div>
+                <div class="rec-footer">
+                  <button type="button" class="btn-save">Save to places</button>
+                </div>
+              </div>
+              <div class="card rec-card" data-rec-id="marjan" data-tags="scenic low-effort evening" data-location="Split" data-kind="Scenic" data-duration="2h">
+                <span class="detour">Low detour</span>
+                <h3>Marjan Hill Sunset</h3>
+                <p>Split · Scenic · 2h · low-effort evening</p>
+                <p class="why">Golden views without a long hike.</p>
+                <div class="tag-row">
+                  <span class="tag">scenic</span>
+                  <span class="tag">low-effort</span>
+                  <span class="tag">evening</span>
+                </div>
+                <div class="rec-footer">
+                  <button type="button" class="btn-save">Save to places</button>
+                </div>
+              </div>
+              <div class="card rec-card" data-rec-id="bluecave" data-tags="full-day must-see high-effort" data-location="Split" data-kind="Day trip" data-duration="8h">
+                <span class="detour">High detour</span>
+                <h3>Blue Cave boat day</h3>
+                <p>Split · Day trip · 8h · high-energy day</p>
+                <p class="why">Classic island-hopping — book ahead, full day.</p>
+                <div class="tag-row">
+                  <span class="tag">full-day</span>
+                  <span class="tag">must-see</span>
+                  <span class="tag">high-effort</span>
+                </div>
+                <div class="rec-footer">
+                  <button type="button" class="btn-save">Save to places</button>
+                </div>
+              </div>
+              <div class="card rec-card" data-rec-id="breakfast" data-tags="food low-effort morning" data-location="Dubrovnik" data-kind="Restaurant" data-duration="1h">
+                <span class="detour">Low detour</span>
+                <h3>Old Town breakfast lane</h3>
+                <p>Dubrovnik · Restaurant · 1h · easy first-morning option</p>
+                <p class="why">Quiet lanes before midday crowds peak.</p>
+                <div class="tag-row">
+                  <span class="tag">food</span>
+                  <span class="tag">low-effort</span>
+                  <span class="tag">morning</span>
+                </div>
+                <div class="rec-footer">
+                  <button type="button" class="btn-save">Save to places</button>
+                </div>
+              </div>
+              <div class="card rec-card" data-rec-id="klis" data-tags="scenic worth-detour afternoon" data-location="Split" data-kind="Attraction" data-duration="2.5h">
+                <span class="detour">Medium detour</span>
+                <h3>Klis Fortress</h3>
+                <p>Split · Attraction · 2.5h · views worth the drive</p>
+                <p class="why">Panoramas over Split and the coast.</p>
+                <div class="tag-row">
+                  <span class="tag">scenic</span>
+                  <span class="tag">worth-detour</span>
+                  <span class="tag">afternoon</span>
+                </div>
+                <div class="rec-footer">
+                  <button type="button" class="btn-save">Save to places</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="note">
+            <strong>Context</strong> — With a coastal route, Dubrovnik → Korčula → Split matches a medium pace and keeps ferry days breathable.
+          </aside>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-routes" role="tabpanel" aria-labelledby="tab-routes" aria-hidden="true">
+        <h2>Routes</h2>
+        <p class="lead">Select a route; pros and tradeoffs update on the right.</p>
+        <div class="grid2">
+          <div id="route-list">
+            <div class="card card--selected route-option" data-route="coastal" role="button" tabindex="0">
+              <h3>Coastal balance</h3>
+              <p><strong style="color: var(--text); font-weight: 600">Dubrovnik → Korčula → Split</strong></p>
+              <p style="margin-top: 0.5rem">
+                Best mix of islands and city time without rushing the coast.
+              </p>
+            </div>
+            <div class="card route-option" data-route="less" role="button" tabindex="0">
+              <h3>Less switching</h3>
+              <p><strong style="color: var(--text); font-weight: 600">Dubrovnik → Split</strong></p>
+              <p style="margin-top: 0.5rem">Fewer moves; longer stretches in each base.</p>
+            </div>
+            <div class="card route-option" data-route="loop" role="button" tabindex="0">
+              <h3>Ambitious scenic loop</h3>
+              <p><strong style="color: var(--text); font-weight: 600">Dubrovnik → Korčula → Hvar → Split</strong></p>
+              <p style="margin-top: 0.5rem">Maximum scenery; higher pace and more ferries.</p>
+            </div>
+          </div>
+          <aside class="card" id="route-detail" style="padding: 0.85rem 0.95rem">
+            <h3 style="margin-top: 0; font-size: 0.95rem" id="route-detail-title">Selected: Coastal balance</h3>
+            <p id="route-detail-summary" class="muted" style="margin-bottom: 0.75rem; font-size: 0.84rem">
+              Best mix of islands and city without rushing.
+            </p>
+            <p class="muted" style="margin-bottom: 0.5rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em">Pros</p>
+            <ul class="list-compact" id="route-detail-pros">
+              <li>Two island bases</li>
+              <li>Ferry rhythm fits medium pace</li>
+              <li>Korčula breaks up the drive</li>
+            </ul>
+            <p class="muted" style="margin: 0.85rem 0 0.45rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em">Tradeoffs</p>
+            <ul class="list-compact" style="color: var(--muted)" id="route-detail-cons">
+              <li>One extra ferry hop</li>
+              <li>Luggage moves more often</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-stops" role="tabpanel" aria-labelledby="tab-stops" aria-hidden="true">
+        <h2>Stops</h2>
+        <p class="lead">Order, nights, stay, transit between bases.</p>
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="day-pill">
+                <span class="pill">1</span>
+                <h3 style="margin: 0">Dubrovnik</h3>
+              </div>
+              <p style="margin-top: 0.5rem">3 nights · Old Town Apartment</p>
+              <p class="muted">Southern Dalmatia · Transit: Arrival</p>
+            </div>
+            <div class="card">
+              <div class="day-pill">
+                <span class="pill">2</span>
+                <h3 style="margin: 0">Korčula</h3>
+              </div>
+              <p style="margin-top: 0.5rem">2 nights · Seafront Guesthouse</p>
+              <p class="muted">Island stop · Transit: Ferry from Dubrovnik</p>
+            </div>
+            <div class="card">
+              <div class="day-pill">
+                <span class="pill">3</span>
+                <h3 style="margin: 0">Split</h3>
+              </div>
+              <p style="margin-top: 0.5rem">4 nights · Diocletian Palace Studio</p>
+              <p class="muted">Central Dalmatia · Transit: Ferry from Korčula</p>
+            </div>
+          </div>
+          <aside>
+            <div class="card">
+              <h3 style="margin-top: 0; font-size: 0.9rem">At a glance by base</h3>
+              <p style="font-size: 0.84rem; line-height: 1.5">
+                <strong>Dubrovnik</strong> — 3 saved-place ideas tied here, 1 reservation.<br />
+                <strong>Korčula</strong> — 1 place, ferry anchor on the timeline.<br />
+                <strong>Split</strong> — 1 place, 1 dinner reservation.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-places" role="tabpanel" aria-labelledby="tab-places" aria-hidden="true">
+        <h2>Saved places</h2>
+        <p class="lead">Search filters the list below. Quick-add appends a row.</p>
+        <label for="place-search" class="sr-only">Search saved places</label>
+        <input
+          id="place-search"
+          type="search"
+          placeholder="Search…"
+          autocomplete="off"
+          style="max-width: 20rem; margin-bottom: 0.65rem"
+        />
+        <div id="place-list">
+          <div class="card place-row" data-place-id="walls" data-search="dubrovnik city walls dubrovnik attraction must 2h blog shortlist">
+            <h3>Dubrovnik City Walls</h3>
+            <p>Dubrovnik · Attraction · 2h · Blog shortlist</p>
+            <div class="place-meta">
+              <span class="pill pill--must">must</span>
+              <span class="pill">Attraction</span>
+            </div>
+          </div>
+          <div class="card place-row" data-place-id="buza" data-search="buza bar dubrovnik food drink want 1.5h youtube">
+            <h3>Buza Bar</h3>
+            <p>Dubrovnik · Food/Drink · 1.5h · YouTube</p>
+            <div class="place-meta">
+              <span class="pill pill--want">want</span>
+              <span class="pill">Food/Drink</span>
+            </div>
+          </div>
+          <div class="card place-row" data-place-id="korcula" data-search="korcula old town korčula neighborhood must 3h manual">
+            <h3>Korčula Old Town</h3>
+            <p>Korčula · Neighborhood · 3h · Manual</p>
+            <div class="place-meta">
+              <span class="pill pill--must">must</span>
+              <span class="pill">Neighborhood</span>
+            </div>
+          </div>
+          <div class="card place-row" data-place-id="ston" data-search="ston oyster between stops scenic maybe 1h influencer">
+            <h3>Ston Oyster Stop</h3>
+            <p>Between stops · Scenic stop · 1h · Influencer</p>
+            <div class="place-meta">
+              <span class="pill pill--maybe">maybe</span>
+              <span class="pill">Scenic stop</span>
+            </div>
+          </div>
+          <div class="card place-row" data-place-id="palace" data-search="diocletian palace split attraction must 2h trip review synthesis">
+            <h3>Diocletian Palace</h3>
+            <p>Split · Attraction · 2h · Trip review synthesis</p>
+            <div class="place-meta">
+              <span class="pill pill--must">must</span>
+              <span class="pill">Attraction</span>
+            </div>
+          </div>
+        </div>
+        <div class="quick-add" id="quick-add">
+          <h3>Quick add place</h3>
+          <form class="form-grid" id="form-quick-place" action="javascript:void(0)">
+            <div style="grid-column: 1 / -1">
+              <label for="qa-name">Name</label>
+              <input id="qa-name" required placeholder="e.g. Hidden cove" autocomplete="off" />
+            </div>
+            <div>
+              <label for="qa-stop">Stop / area</label>
+              <select id="qa-stop" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; border-radius: 0.65rem; border: 1px solid var(--border); font: inherit">
+                <option>Dubrovnik</option>
+                <option>Korčula</option>
+                <option>Split</option>
+                <option>Between stops</option>
+              </select>
+            </div>
+            <div>
+              <label for="qa-prio">Priority</label>
+              <select id="qa-prio" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; border-radius: 0.65rem; border: 1px solid var(--border); font: inherit">
+                <option value="must">must</option>
+                <option value="want" selected>want</option>
+                <option value="maybe">maybe</option>
+              </select>
+            </div>
+            <div style="grid-column: 1 / -1">
+              <button type="submit" class="btn btn--primary" style="width: 100%; padding: 0.5rem">Add place</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-res" role="tabpanel" aria-labelledby="tab-res" aria-hidden="true">
+        <h2>Reservations</h2>
+        <p class="lead">Fixed bookings only (separate from flexible places).</p>
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
+          <div class="card">
+            <span class="pill">Tour</span>
+            <h3 style="margin-top: 0.4rem">Sunset Food Tour</h3>
+            <p>May 11 · 18:00 · Dubrovnik</p>
+          </div>
+          <div class="card">
+            <span class="pill">Ferry</span>
+            <h3 style="margin-top: 0.4rem">Ferry to Korčula</h3>
+            <p>May 13 · 10:30 · Transit</p>
+          </div>
+          <div class="card">
+            <span class="pill">Restaurant</span>
+            <h3 style="margin-top: 0.4rem">Dinner reservation</h3>
+            <p>May 17 · 20:00 · Split</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-planner" role="tabpanel" aria-labelledby="tab-planner" aria-hidden="true">
+        <h2>Planner</h2>
+        <p class="lead">Choose a day. <strong>Add to day</strong> stages into afternoon; × removes only what you added.</p>
+        <div class="planner3">
+          <div class="card card--ghost">
+            <strong style="font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em">Days</strong>
+            <button type="button" class="day-card" data-day="may11" aria-current="true">
+              <strong>May 11</strong><br /><span class="muted" style="font-size: 0.8rem">Dubrovnik</span>
+            </button>
+            <button type="button" class="day-card" data-day="may12" aria-current="false">
+              <strong>May 12</strong><br /><span class="muted" style="font-size: 0.8rem">Dubrovnik</span>
+            </button>
+            <button type="button" class="day-card" data-day="may13" aria-current="false">
+              <strong>May 13</strong><br />
+              <span class="muted" style="font-size: 0.8rem">Korčula</span>
+              <span class="pill" style="margin-left: 0.35rem">Travel</span>
+            </button>
+          </div>
+          <div id="planner-center-wrap">
+            <div class="planner-slice" data-planner-day="may11">
+              <div class="card" style="margin-bottom: 0.5rem; padding: 0.55rem 0.7rem">
+                <p style="margin: 0; font-size: 0.84rem"><strong>May 11</strong> · Dubrovnik</p>
+              </div>
+              <div class="buckets">
+                <div class="bucket" data-bucket="morning">
+                  <div class="bucket-head">
+                    <strong>Morning</strong>
+                    <span class="count" data-count-for="may11-morning">1</span>
+                  </div>
+                  <div class="hint">Before noon</div>
+                  <div data-fixed-lines>
+                    09:00 — Old Town stroll <span class="pill" style="font-size: 0.55rem">custom</span>
+                  </div>
+                </div>
+                <div class="bucket" data-bucket="afternoon">
+                  <div class="bucket-head">
+                    <strong>Afternoon</strong>
+                    <span class="count" data-count-for="may11-afternoon">1</span>
+                  </div>
+                  <div class="hint">12:00 – 17:00</div>
+                  <div data-fixed-lines>
+                    14:00 — Dubrovnik City Walls <span class="pill" style="font-size: 0.55rem">place</span>
+                  </div>
+                  <div id="dyn-afternoon-may11"></div>
+                </div>
+                <div class="bucket" data-bucket="evening">
+                  <div class="bucket-head">
+                    <strong>Evening</strong>
+                    <span class="count" data-count-for="may11-evening">1</span>
+                  </div>
+                  <div class="hint">From 17:00</div>
+                  <div>18:00 — Sunset Food Tour <span class="pill" style="font-size: 0.55rem">reservation</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="planner-slice" data-planner-day="may12" hidden>
+              <div class="card" style="margin-bottom: 0.5rem; padding: 0.55rem 0.7rem">
+                <p style="margin: 0; font-size: 0.84rem"><strong>May 12</strong> · Dubrovnik</p>
+              </div>
+              <div class="buckets">
+                <div class="bucket">
+                  <div class="bucket-head">
+                    <strong>Morning</strong>
+                    <span class="count" data-count-for="may12-morning">0</span>
+                  </div>
+                  <div class="hint">Before noon</div>
+                  <div class="muted" style="font-size: 0.78rem">Nothing yet — add from Available.</div>
+                </div>
+                <div class="bucket">
+                  <div class="bucket-head">
+                    <strong>Afternoon</strong>
+                    <span class="count" data-count-for="may12-afternoon">0</span>
+                  </div>
+                  <div class="hint">12:00 – 17:00</div>
+                  <div id="dyn-afternoon-may12"></div>
+                </div>
+                <div class="bucket">
+                  <div class="bucket-head">
+                    <strong>Evening</strong>
+                    <span class="count" data-count-for="may12-evening">0</span>
+                  </div>
+                  <div class="hint">From 17:00</div>
+                  <div class="muted" style="font-size: 0.78rem">Open</div>
+                </div>
+              </div>
+            </div>
+            <div class="planner-slice" data-planner-day="may13" hidden>
+              <div class="card" style="margin-bottom: 0.5rem; padding: 0.55rem 0.7rem">
+                <p style="margin: 0; font-size: 0.84rem"><strong>May 13</strong> · Korčula</p>
+                <p style="margin: 0.35rem 0 0; font-size: 0.72rem; color: #92400e">Travel day — go light.</p>
+              </div>
+              <div class="buckets">
+                <div class="bucket">
+                  <div class="bucket-head">
+                    <strong>Morning</strong>
+                    <span class="count" data-count-for="may13-morning">1</span>
+                  </div>
+                  <div class="hint">Before noon</div>
+                  <div>08:00 — Pack + checkout <span class="pill" style="font-size: 0.55rem">custom</span></div>
+                </div>
+                <div class="bucket">
+                  <div class="bucket-head">
+                    <strong>Afternoon</strong>
+                    <span class="count" data-count-for="may13-afternoon">1</span>
+                  </div>
+                  <div class="hint">Transit window</div>
+                  <div>10:30 — Ferry to Korčula <span class="pill" style="font-size: 0.55rem">reservation</span></div>
+                </div>
+                <div class="bucket">
+                  <div class="bucket-head">
+                    <strong>Evening</strong>
+                    <span class="count" data-count-for="may13-evening">1</span>
+                  </div>
+                  <div class="hint">From 17:00</div>
+                  <div>16:00 — Korčula Old Town <span class="pill" style="font-size: 0.55rem">place</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" id="btn-rebuild" title="Shows what a rebuild could do">
+                Rebuild day
+              </button>
+              <span class="muted" style="font-size: 0.7rem; margin-left: 0.25rem">Auto-fill & custom — not in prototype</span>
+            </div>
+          </div>
+          <div class="card">
+            <strong style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em">Available</strong>
+            <p style="font-size: 0.76rem; margin: 0.35rem 0 0.5rem; color: var(--muted)">
+              For <span id="avail-stop-label">Dubrovnik</span> · unscheduled only
+            </p>
+            <div id="available-stack">
+              <div class="card card--ghost avail-row" id="avail-buza" data-place="buza" data-stops="dubrovnik" style="margin-top: 0">
+                <p style="margin: 0; font-size: 0.82rem">Buza Bar · want · 1.5h</p>
+                <button type="button" class="btn btn--primary" style="margin-top: 0.6rem; width: 100%" data-add-place="buza">
+                  Add to day
+                </button>
+              </div>
+            </div>
+            <p class="muted" id="avail-empty" style="display: none; font-size: 0.76rem; margin-top: 0.5rem">Nothing to stage.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-review" role="tabpanel" aria-labelledby="tab-review" aria-hidden="true">
+        <h2>Review</h2>
+        <p class="lead">Warnings and sanity checks before you commit.</p>
+        <div class="grid2">
+          <div>
+            <div class="card warn">
+              <h3 style="margin-top: 0; font-size: 0.92rem">Must-do not on the timeline</h3>
+              <p>Any “must” still only in Saved places (e.g. Diocletian Palace if not dragged to a day).</p>
+            </div>
+            <div class="card warn" style="margin-top: 0.65rem">
+              <h3 style="margin-top: 0; font-size: 0.92rem">Heavy travel day</h3>
+              <p>If a travel day has more than ~3–4 blocks, suggest trimming or moving flex items.</p>
+            </div>
+            <div class="card ok" style="margin-top: 0.65rem">
+              <h3 style="margin-top: 0; font-size: 0.92rem">Route and anchors line up</h3>
+              <p>Coastal balance selected; reservations appear on the planner alongside flexible blocks.</p>
+            </div>
+          </div>
+          <aside class="note">
+            <strong>Flow</strong> — Discover → route → places → reservations → planner → review.
+          </aside>
+        </div>
+      </section>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+      (function () {
+        var STORAGE_KEY = "tripAssistantProto-v1";
+        var ROUTE_DATA = {
+          coastal: {
+            label: "Coastal balance",
+            summary: "Best mix of islands and city without rushing.",
+            pros: ["Two island bases", "Ferry rhythm fits medium pace", "Korčula breaks up the drive"],
+            cons: ["One extra ferry hop", "Luggage moves more often"],
+          },
+          less: {
+            label: "Less switching",
+            summary: "Fewer moves; more depth in fewer bases.",
+            pros: ["Minimal transit days", "Simpler luggage"],
+            cons: ["Skips Korčula", "Longer drive days if you add detours"],
+          },
+          loop: {
+            label: "Ambitious scenic loop",
+            summary: "Maximum scenery with an extra island.",
+            pros: ["Hvar option", "Classic island trio"],
+            cons: ["More ferries", "Higher overall pace"],
+          },
+        };
+
+        var tabs = document.querySelectorAll('.tabs [role="tab"]');
+        var panels = {
+          setup: document.getElementById("panel-setup"),
+          discover: document.getElementById("panel-discover"),
+          routes: document.getElementById("panel-routes"),
+          stops: document.getElementById("panel-stops"),
+          places: document.getElementById("panel-places"),
+          res: document.getElementById("panel-res"),
+          planner: document.getElementById("panel-planner"),
+          review: document.getElementById("panel-review"),
+        };
+
+        var state = {
+          savedRecIds: [],
+          route: "coastal",
+          plannerDay: "may11",
+          buzaDay: null,
+          trip: {},
+        };
+
+        function loadState() {
+          try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            var o = JSON.parse(raw);
+            if (o.savedRecIds) state.savedRecIds = o.savedRecIds;
+            if (o.route) state.route = o.route;
+            if (o.plannerDay) state.plannerDay = o.plannerDay;
+            if (o.buzaDay !== undefined) state.buzaDay = o.buzaDay;
+            if (o.trip) state.trip = o.trip;
+          } catch (e) {}
+        }
+
+        function saveState() {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          } catch (e) {}
+        }
+
+        function show(name) {
+          Object.keys(panels).forEach(function (key) {
+            var p = panels[key];
+            if (!p) return;
+            var on = key === name;
+            p.setAttribute("aria-hidden", on ? "false" : "true");
+          });
+          tabs.forEach(function (btn) {
+            var on = btn.getAttribute("data-tab") === name;
+            btn.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          if (history.replaceState) {
+            history.replaceState(null, "", name === "setup" ? "#" : "#" + name);
+          }
+        }
+
+        tabs.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            show(btn.getAttribute("data-tab"));
+          });
+        });
+
+        var hash = (location.hash || "").replace(/^#/, "");
+        if (hash && panels[hash]) show(hash);
+
+        function toast(msg) {
+          var el = document.getElementById("toast");
+          if (!el) return;
+          el.textContent = msg;
+          el.classList.add("is-on");
+          clearTimeout(toast._t);
+          toast._t = setTimeout(function () {
+            el.classList.remove("is-on");
+          }, 2600);
+        }
+
+        function applyTripToForm() {
+          var t = state.trip;
+          var map = {
+            "t-name": "name",
+            "t-country": "country",
+            "t-dates": "dates",
+            "t-pace": "pace",
+            "t-transport": "transport",
+            "t-notes": "notes",
+          };
+          Object.keys(map).forEach(function (id) {
+            var inp = document.getElementById(id);
+            if (inp && t[map[id]] != null) inp.value = t[map[id]];
+          });
+        }
+
+        function readTripFromForm() {
+          state.trip = {
+            name: (document.getElementById("t-name") || {}).value || "",
+            country: (document.getElementById("t-country") || {}).value || "",
+            dates: (document.getElementById("t-dates") || {}).value || "",
+            pace: (document.getElementById("t-pace") || {}).value || "",
+            transport: (document.getElementById("t-transport") || {}).value || "",
+            notes: (document.getElementById("t-notes") || {}).value || "",
+          };
+          saveState();
+        }
+
+        ["t-name", "t-country", "t-dates", "t-pace", "t-transport", "t-notes"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener("input", function () {
+            readTripFromForm();
+          });
+        });
+
+        function refreshDiscoverFilter() {
+          var activeBtn = document.querySelector('#discover-filters button[data-active="true"]');
+          var f = activeBtn ? activeBtn.getAttribute("data-filter") : "all";
+          applyDiscoverFilter(f);
+        }
+
+        var filterBtns = document.querySelectorAll("#discover-filters button");
+        function applyDiscoverFilter(active) {
+          filterBtns.forEach(function (b) {
+            b.setAttribute("data-active", b.getAttribute("data-filter") === active ? "true" : "false");
+          });
+          var recCards = document.querySelectorAll("#rec-list .rec-card");
+          recCards.forEach(function (card) {
+            if (card.classList.contains("is-saved")) {
+              card.hidden = true;
+              return;
+            }
+            var tags = (card.getAttribute("data-tags") || "").split(/\s+/);
+            var visible = active === "all" || tags.indexOf(active) !== -1;
+            card.hidden = !visible;
+          });
+          syncDiscoverEmpty();
+        }
+        filterBtns.forEach(function (b) {
+          b.addEventListener("click", function () {
+            applyDiscoverFilter(b.getAttribute("data-filter"));
+          });
+        });
+
+        function syncDiscoverEmpty() {
+          var empty = document.getElementById("discover-empty");
+          var left = document.querySelectorAll("#rec-list .rec-card:not(.is-saved)").length;
+          if (empty) empty.classList.toggle("is-visible", left === 0);
+        }
+
+        function addPlaceFromRec(card) {
+          var id = card.getAttribute("data-rec-id");
+          var placeId = "from-" + id;
+          if (document.querySelector('#place-list [data-place-id="' + placeId + '"]')) return;
+          var title = card.querySelector("h3");
+          var name = title ? title.textContent.trim() : "Place";
+          var loc = card.getAttribute("data-location") || "";
+          var kind = card.getAttribute("data-kind") || "Spot";
+          var dur = card.getAttribute("data-duration") || "";
+          var search = (
+            name +
+            " " +
+            loc +
+            " " +
+            kind +
+            " want " +
+            dur +
+            " discover"
+          )
+            .toLowerCase()
+            .replace(/\s+/g, " ");
+          var row = document.createElement("div");
+          row.className = "card place-row";
+          row.setAttribute("data-place-id", placeId);
+          row.setAttribute("data-search", search);
+          row.innerHTML =
+            "<h3>" +
+            name +
+            "</h3><p>" +
+            loc +
+            " · " +
+            kind +
+            " · " +
+            dur +
+            " · <span class=\"muted\">Discover</span></p><div class=\"place-meta\"><span class=\"pill pill--want\">want</span><span class=\"pill\">" +
+            kind +
+            "</span></div>";
+          var list = document.getElementById("place-list");
+          if (list) list.appendChild(row);
+        }
+
+        document.getElementById("rec-list").addEventListener("click", function (e) {
+          var btn = e.target.closest(".btn-save");
+          if (!btn) return;
+          var card = btn.closest(".rec-card");
+          if (!card || card.classList.contains("is-saved")) return;
+          var rid = card.getAttribute("data-rec-id");
+          card.classList.add("is-saved");
+          if (state.savedRecIds.indexOf(rid) === -1) state.savedRecIds.push(rid);
+          addPlaceFromRec(card);
+          saveState();
+          refreshDiscoverFilter();
+          toast("Saved to places — check the Saved places tab.");
+        });
+
+        function applyRoute(routeKey) {
+          state.route = routeKey;
+          var data = ROUTE_DATA[routeKey];
+          if (!data) return;
+          document.querySelectorAll(".route-option").forEach(function (el) {
+            var on = el.getAttribute("data-route") === routeKey;
+            el.classList.toggle("card--selected", on);
+          });
+          var title = document.getElementById("route-detail-title");
+          var sum = document.getElementById("route-detail-summary");
+          var pros = document.getElementById("route-detail-pros");
+          var cons = document.getElementById("route-detail-cons");
+          if (title) title.textContent = "Selected: " + data.label;
+          if (sum) sum.textContent = data.summary;
+          if (pros) {
+            pros.innerHTML = data.pros.map(function (p) {
+              return "<li>" + p + "</li>";
+            }).join("");
+          }
+          if (cons) {
+            cons.innerHTML = data.cons.map(function (p) {
+              return "<li>" + p + "</li>";
+            }).join("");
+          }
+          saveState();
+        }
+
+        document.getElementById("route-list").addEventListener("click", function (e) {
+          var opt = e.target.closest(".route-option");
+          if (!opt) return;
+          applyRoute(opt.getAttribute("data-route"));
+        });
+        document.getElementById("route-list").addEventListener("keydown", function (e) {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          var opt = e.target.closest(".route-option");
+          if (!opt) return;
+          e.preventDefault();
+          applyRoute(opt.getAttribute("data-route"));
+        });
+
+        function showPlannerDay(day) {
+          state.plannerDay = day;
+          document.querySelectorAll(".day-card").forEach(function (b) {
+            b.setAttribute("aria-current", b.getAttribute("data-day") === day ? "true" : "false");
+          });
+          document.querySelectorAll(".planner-slice").forEach(function (slice) {
+            var d = slice.getAttribute("data-planner-day");
+            slice.hidden = d !== day;
+          });
+          var label = document.getElementById("avail-stop-label");
+          if (label) label.textContent = day === "may13" ? "Korčula" : "Dubrovnik";
+          syncAvailable();
+          saveState();
+        }
+
+        document.getElementById("panel-planner").addEventListener("click", function (e) {
+          var db = e.target.closest(".day-card");
+          if (!db) return;
+          showPlannerDay(db.getAttribute("data-day"));
+        });
+
+        function syncAvailable() {
+          var row = document.getElementById("avail-buza");
+          var empty = document.getElementById("avail-empty");
+          if (!row) return;
+          var day = state.plannerDay;
+          var dub = day === "may11" || day === "may12";
+          var show = dub && !state.buzaDay;
+          row.hidden = !show;
+          if (empty) empty.style.display = show ? "none" : "block";
+        }
+
+        function updateMay11AfternoonCount() {
+          var n = document.getElementById("dyn-afternoon-may11");
+          var c = document.querySelector('[data-count-for="may11-afternoon"]');
+          if (c) c.textContent = String(1 + (n ? n.children.length : 0));
+        }
+        function updateMay12AfternoonCount() {
+          var n = document.getElementById("dyn-afternoon-may12");
+          var c = document.querySelector('[data-count-for="may12-afternoon"]');
+          if (c) c.textContent = String(n ? n.children.length : 0);
+        }
+
+        function addBuzaToDay() {
+          var day = state.plannerDay;
+          if (day !== "may11" && day !== "may12") return;
+          if (state.buzaDay) return;
+          var target = document.getElementById(day === "may11" ? "dyn-afternoon-may11" : "dyn-afternoon-may12");
+          if (!target) return;
+          var line = document.createElement("div");
+          line.className = "bucket-line";
+          line.setAttribute("data-dynamic", "buza");
+          line.innerHTML =
+            '<span>14:00 — Buza Bar <span class="pill" style="font-size:0.55rem">place</span></span><button type="button" class="rm" aria-label="Remove" title="Remove from day">×</button>';
+          target.appendChild(line);
+          state.buzaDay = day;
+          saveState();
+          syncAvailable();
+          if (day === "may11") updateMay11AfternoonCount();
+          else updateMay12AfternoonCount();
+          toast("Buza Bar added to " + (day === "may11" ? "May 11" : "May 12") + ".");
+        }
+
+        document.getElementById("available-stack").addEventListener("click", function (e) {
+          var b = e.target.closest("[data-add-place]");
+          if (!b) return;
+          addBuzaToDay();
+        });
+
+        document.getElementById("planner-center-wrap").addEventListener("click", function (e) {
+          var rm = e.target.closest(".rm");
+          if (!rm) return;
+          var line = rm.closest(".bucket-line");
+          if (!line || !line.getAttribute("data-dynamic")) return;
+          var parent = line.parentNode;
+          line.remove();
+          state.buzaDay = null;
+          saveState();
+          syncAvailable();
+          if (parent && parent.id === "dyn-afternoon-may11") updateMay11AfternoonCount();
+          if (parent && parent.id === "dyn-afternoon-may12") updateMay12AfternoonCount();
+          toast("Removed from day — back in Available when Dubrovnik days are selected.");
+        });
+
+        document.getElementById("btn-rebuild").addEventListener("click", function () {
+          toast(
+            "Rebuild: would keep pinned items and suggest 1–2 unscheduled places for this stop (prototype)."
+          );
+        });
+
+        var searchInput = document.getElementById("place-search");
+        function applyPlaceSearch() {
+          var q = (searchInput.value || "").trim().toLowerCase();
+          var placeRows = document.querySelectorAll("#place-list .place-row");
+          placeRows.forEach(function (row) {
+            var hay = (row.getAttribute("data-search") || "").toLowerCase();
+            row.hidden = q.length > 0 && hay.indexOf(q) === -1;
+          });
+        }
+        if (searchInput) searchInput.addEventListener("input", applyPlaceSearch);
+
+        document.getElementById("form-quick-place").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var nameEl = document.getElementById("qa-name");
+          var stopEl = document.getElementById("qa-stop");
+          var prioEl = document.getElementById("qa-prio");
+          var name = (nameEl.value || "").trim();
+          if (!name) return;
+          var stop = stopEl.options[stopEl.selectedIndex].text;
+          var prio = prioEl.value;
+          var id = "qa-" + Date.now();
+          var pillClass = prio === "must" ? "pill--must" : prio === "want" ? "pill--want" : "pill--maybe";
+          var search = (name + " " + stop + " " + prio + " manual").toLowerCase();
+          var row = document.createElement("div");
+          row.className = "card place-row";
+          row.setAttribute("data-place-id", id);
+          row.setAttribute("data-search", search);
+          row.innerHTML =
+            "<h3>" +
+            name +
+            "</h3><p>" +
+            stop +
+            " · Note · <span class=\"muted\">Manual</span></p><div class=\"place-meta\"><span class=\"pill " +
+            pillClass +
+            '">' +
+            prio +
+            '</span><span class="pill">Note</span></div>';
+          document.getElementById("place-list").appendChild(row);
+          nameEl.value = "";
+          readTripFromForm();
+          toast("Place added to Saved places.");
+        });
+
+        document.getElementById("btn-export").addEventListener("click", function () {
+          readTripFromForm();
+          var payload = { version: 1, savedAt: new Date().toISOString(), state: state };
+          var text = JSON.stringify(payload, null, 2);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+              function () {
+                toast("State JSON copied to clipboard.");
+              },
+              function () {
+                prompt("Copy this JSON:", text);
+              }
+            );
+          } else {
+            prompt("Copy this JSON:", text);
+          }
+        });
+
+        document.getElementById("btn-reset").addEventListener("click", function () {
+          if (!confirm("Reset all prototype data in this browser?")) return;
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+        });
+
+        var tablist = document.querySelector(".tabs");
+        if (tablist) {
+          tablist.addEventListener("keydown", function (e) {
+            var keys = { ArrowLeft: -1, ArrowRight: 1 };
+            if (keys[e.key] === undefined) return;
+            var list = Array.prototype.slice.call(tabs);
+            var i = list.indexOf(document.activeElement);
+            if (i === -1) return;
+            e.preventDefault();
+            var next = list[i + keys[e.key]];
+            if (next) next.focus();
+          });
+        }
+
+        /* Init */
+        loadState();
+        if (state.trip && state.trip.name) applyTripToForm();
+        state.savedRecIds.forEach(function (rid) {
+          var card = document.querySelector('#rec-list [data-rec-id="' + rid + '"]');
+          if (card) {
+            card.classList.add("is-saved");
+            addPlaceFromRec(card);
+          }
+        });
+        refreshDiscoverFilter();
+        applyRoute(state.route || "coastal");
+        showPlannerDay(state.plannerDay || "may11");
+        if (state.buzaDay === "may11" || state.buzaDay === "may12") {
+          var targetId = state.buzaDay === "may11" ? "dyn-afternoon-may11" : "dyn-afternoon-may12";
+          var target = document.getElementById(targetId);
+          if (target && target.children.length === 0) {
+            var line = document.createElement("div");
+            line.className = "bucket-line";
+            line.setAttribute("data-dynamic", "buza");
+            line.innerHTML =
+              '<span>14:00 — Buza Bar <span class="pill" style="font-size:0.55rem">place</span></span><button type="button" class="rm" aria-label="Remove">×</button>';
+            target.appendChild(line);
+          }
+        }
+        updateMay11AfternoonCount();
+        updateMay12AfternoonCount();
+        syncAvailable();
+      })();
+    </script>
+  </body>
+</html>
