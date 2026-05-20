@@ -15,6 +15,11 @@
   --goal-border: rgba(125, 180, 200, 0.35);
   --goal-text: #b8dce8;
   --success: #8fd4a2;
+  --success-muted: rgba(143, 212, 162, 0.18);
+  --error: #f0a0a8;
+  --error-muted: rgba(240, 160, 168, 0.12);
+  --progress: #9ec5f0;
+  --progress-muted: rgba(158, 197, 240, 0.14);
   --row-stripe: rgba(255, 255, 255, 0.03);
   --cell-border: rgba(255, 255, 255, 0.1);
   --cell-fill: #2e333d;
@@ -36,6 +41,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -48,6 +54,9 @@ body {
   background: var(--bg);
   color: var(--text);
   padding-bottom: env(safe-area-inset-bottom, 0);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.06);
+  color-scheme: dark;
 }
 
 /* Subtle top wash only — easier on eyes than a strong radial */
@@ -60,15 +69,17 @@ body::before {
   z-index: -1;
 }
 
-body.game-won .status {
-  color: var(--success);
-  font-weight: 600;
+body.game-won .input-section {
+  opacity: 0.58;
+  pointer-events: none;
 }
 
 main {
+  width: 100%;
   max-width: 28rem;
   margin: 0 auto;
-  padding: 1.25rem max(1rem, env(safe-area-inset-left)) 2.5rem max(1rem, env(safe-area-inset-right));
+  padding: max(1rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-left))
+    max(1.5rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-right));
 }
 
 .page-header {
@@ -153,6 +164,8 @@ main {
   padding: 1.1rem 1rem 1.25rem;
   border: 1px solid var(--panel-border);
   box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 100%;
 }
 
 .panel-section {
@@ -172,15 +185,27 @@ main {
   color: var(--muted-faint);
 }
 
+#typing-heading:focus {
+  outline: none;
+}
+
+#typing-heading:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .ladder-rows {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: min(42vh, 16rem);
+  max-height: min(40vh, 16rem);
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 4px 2px 6px 0;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .ladder-rows::-webkit-scrollbar {
@@ -211,6 +236,11 @@ main {
   background: var(--accent-muted);
 }
 
+.ladder-row--goal-done {
+  border-color: rgba(143, 212, 162, 0.35);
+  background: var(--success-muted);
+}
+
 .row-label {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -227,11 +257,13 @@ main {
   letter-spacing: 0.06em;
   color: var(--text);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .goal-banner {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.65rem;
   margin-bottom: 1rem;
@@ -239,10 +271,24 @@ main {
   border-radius: var(--radius-sm);
   background: var(--goal-bg);
   border: 1px solid var(--goal-border);
+  min-width: 0;
 }
 
 .goal-banner.hidden {
   display: none;
+}
+
+.goal-banner--done {
+  background: var(--success-muted);
+  border-color: rgba(143, 212, 162, 0.45);
+}
+
+.goal-banner--done .goal-label {
+  color: var(--success);
+}
+
+.goal-banner--done .goal-word {
+  color: var(--text);
 }
 
 .goal-label {
@@ -259,6 +305,8 @@ main {
   font-size: clamp(1.1rem, 3.8vw, 1.25rem);
   letter-spacing: 0.06em;
   color: var(--goal-text);
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .input-section {
@@ -269,21 +317,28 @@ main {
 
 .row {
   display: flex;
-  gap: 7px;
+  width: 100%;
+  max-width: 100%;
+  gap: clamp(4px, 1.8vw, 8px);
   justify-content: center;
   flex-wrap: nowrap;
+  box-sizing: border-box;
 }
 
 .cell {
-  width: clamp(48px, 11vw, 56px);
-  height: clamp(48px, 11vw, 56px);
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+  aspect-ratio: 1;
+  max-width: 3.5rem;
+  max-height: 3.5rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--cell-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--mono);
-  font-size: clamp(1.05rem, 4vw, 1.3rem);
+  font-size: clamp(0.95rem, 5.2vw, 1.25rem);
   font-weight: 600;
   text-transform: uppercase;
   user-select: none;
@@ -302,33 +357,46 @@ main {
   opacity: 0.35;
 }
 
+.cell--diff {
+  border-color: rgba(240, 160, 168, 0.55);
+  background: var(--error-muted);
+  color: var(--error);
+}
+
 .keyboard {
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .kbd-row {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
 }
 
 .kbd-key {
-  min-width: 2rem;
+  flex: 1 1 1.5rem;
+  min-width: 0;
+  max-width: 2.65rem;
   min-height: 2.75rem;
-  padding: 0 0.45rem;
+  padding: 0 0.2rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-sm);
   background: var(--key-bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 0.8125rem;
+  font-size: clamp(0.7rem, 3.2vw, 0.8125rem);
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
+  touch-action: manipulation;
 }
 
 .kbd-key:hover {
@@ -349,15 +417,20 @@ main {
 }
 
 .kbd-key.wide {
-  min-width: 3.25rem;
-  font-size: 0.75rem;
+  flex: 1.35 1 3rem;
+  max-width: 4.5rem;
+  min-width: 2.75rem;
+  font-size: clamp(0.65rem, 2.8vw, 0.75rem);
   text-transform: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .kbd-key:active {
-    transform: none;
-  }
+.kbd-key--dim {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.kbd-key--dim:hover {
+  background: var(--key-bg);
 }
 
 .status {
@@ -370,6 +443,63 @@ main {
   background: rgba(0, 0, 0, 0.15);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.status--error {
+  color: var(--error);
+  background: var(--error-muted);
+  border-color: rgba(240, 160, 168, 0.25);
+  font-weight: 500;
+}
+
+.status--success {
+  color: var(--success);
+  background: var(--success-muted);
+  border-color: rgba(143, 212, 162, 0.28);
+  font-weight: 600;
+}
+
+.status--progress {
+  color: var(--progress);
+  background: var(--progress-muted);
+  border-color: rgba(158, 197, 240, 0.22);
+}
+
+.par-hint-row {
+  margin-top: 0.5rem;
+}
+
+.ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  background: transparent;
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ghost-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.ghost-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .par-note {
@@ -378,6 +508,10 @@ main {
   color: var(--muted);
   min-height: 1.25em;
   line-height: 1.45;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .actions {
@@ -405,6 +539,8 @@ main {
   font-size: 0.875rem;
   cursor: pointer;
   line-height: 1.2;
+  min-height: 2.75rem;
+  touch-action: manipulation;
 }
 
 .actions button.primary {
@@ -431,6 +567,7 @@ main {
 .actions button.secondary.tight {
   flex: 0 0 auto;
   min-width: 5.5rem;
+  min-height: 2.75rem;
 }
 
 .actions button:focus-visible {
@@ -441,4 +578,85 @@ main {
 .actions button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+@media (min-width: 520px) {
+  .kbd-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+    max-width: none;
+  }
+
+  .kbd-key {
+    flex: 0 0 auto;
+    min-width: 2rem;
+    max-width: none;
+    width: auto;
+    padding: 0 0.45rem;
+    font-size: 0.8125rem;
+  }
+
+  .kbd-key.wide {
+    flex: 0 0 auto;
+    min-width: 3.25rem;
+    max-width: none;
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kbd-key:active {
+    transform: none;
+  }
+
+  .status {
+    transition: none;
+  }
+}
+
+/* Phones: more vertical room for ladder, slightly tighter chrome */
+@media (max-width: 480px) {
+  .ladder-rows {
+    max-height: min(36vh, 15rem);
+  }
+
+  .panel {
+    padding: 0.95rem 0.65rem 1.1rem;
+    border-radius: 10px;
+  }
+
+  .lede {
+    max-width: none;
+  }
+
+  .par-note {
+    font-size: 0.8rem;
+  }
+}
+
+/* Very narrow: keep keys on one row without overflow */
+@media (max-width: 360px) {
+  .kbd-row {
+    gap: 3px;
+  }
+
+  .kbd-key {
+    max-width: 2.35rem;
+    min-height: 2.5rem;
+    font-size: 0.68rem;
+  }
+
+  .kbd-key.wide {
+    min-width: 2.35rem;
+    max-width: 3.75rem;
+    font-size: 0.6rem;
+    padding: 0 0.15rem;
+  }
+
+  .ladder-row {
+    grid-template-columns: 2.85rem 1fr;
+    gap: 0.45rem;
+    padding: 0.5rem 0.45rem;
+  }
 }

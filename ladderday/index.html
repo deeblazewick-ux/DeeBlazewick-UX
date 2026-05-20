@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1a1d24" />
+    <meta name="color-scheme" content="dark" />
     <meta
       name="description"
       content="Ladder Day: change one letter at a time from a start word to a goal word — every step must be a real word."
@@ -35,15 +40,20 @@
         <div id="goal-banner" class="goal-banner" aria-label="Goal word"></div>
 
         <div class="panel-section input-section">
-          <h2 class="section-label">Type the next word</h2>
+          <h2 id="typing-heading" class="section-label" tabindex="-1">Type the next word</h2>
           <div id="current-row" class="row current-wrap" role="group" aria-label="Current typing"></div>
           <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
         </div>
 
         <p id="status" class="status" role="status" aria-live="polite"></p>
+
+        <div class="par-hint-row">
+          <button type="button" id="btn-par-hint" class="ghost-btn">Show shortest length</button>
+        </div>
         <p id="par-note" class="par-note" aria-live="polite"></p>
 
         <div class="actions">
+          <button type="button" id="btn-copy" class="secondary hidden">Copy result</button>
           <button type="button" id="btn-undo" class="secondary">Undo last step</button>
           <div class="actions-row">
             <button type="button" id="btn-today" class="primary">Today’s ladder</button>

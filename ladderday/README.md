@@ -10,7 +10,11 @@ A static **word ladder** puzzle:
 
 **Practice:** `?practice=1` or **Random (practice)**.
 
-**Finished UI preview:** open `http://localhost:5176/?demo=won` (after starting the server below) to see a solved ladder, success styling, and the step / par summary.
+**Finished UI preview:** `?demo=won` — solved state for screenshots.
+
+**Shortest length:** use **Show shortest length**, or it appears automatically after your first valid step.
+
+**Copy result:** after you win, **Copy result** puts a shareable text block on the clipboard.
 
 ## Run locally
 
@@ -18,7 +22,9 @@ A static **word ladder** puzzle:
 cd ladderday && python3 -m http.server 5176
 ```
 
-Open [http://localhost:5176](http://localhost:5176).
+Open [http://localhost:5176](http://localhost:5176) on your phone (same Wi‑Fi as your computer) or deploy to Pages.
+
+The layout uses safe areas, flexible letter tiles, and a keyboard that scales on narrow screens.
 
 ## Customize
 
