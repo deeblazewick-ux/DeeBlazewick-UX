@@ -77,13 +77,11 @@ function startGame() {
   chain = [puzzle.start];
   buffer = "";
   won = false;
-  $mode.textContent = practiceMode ? "Practice (random ladder)" : "Today’s ladder (UTC)";
+  $mode.textContent = practiceMode ? "Practice · random start & goal" : "Daily puzzle · same for everyone (UTC)";
   $parNote.textContent = "";
   document.body.classList.toggle("game-won", false);
   renderAll();
-  announce(
-    "Change one letter at a time. Each step must be a valid word. Reach the goal."
-  );
+  announce("Type a word that changes one letter from the last row, then press Enter.");
 }
 
 function announce(msg) {
