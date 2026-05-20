@@ -35,7 +35,8 @@ jobs:
         run: |
           mkdir -p _site/puzzle _site/ladderday _site/antiwordle _site/anti-wordle
           cp -r Puzzle/index.html Puzzle/css Puzzle/js _site/puzzle/
-          cp -r ladderday/index.html ladderday/css ladderday/js _site/ladderday/
+          cp -r ladderday/css ladderday/js ladderday/media _site/ladderday/
+          cp ladderday/*.html _site/ladderday/
           cp .github/pages-redirect-antiwordle/index.html _site/antiwordle/index.html
           cp .github/pages-redirect-anti-wordle/index.html _site/anti-wordle/index.html
           cp .github/pages-root/index.html _site/index.html

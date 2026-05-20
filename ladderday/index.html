@@ -10,21 +10,13 @@
     <meta name="color-scheme" content="dark" />
     <meta
       name="description"
-      content="Ladder Day: tweak one letter from the last word each hop — real words only — hop your way to the goal."
+      content="Ladder Day — five-letter words from Start to Goal, one letter flips each time. Example in a quick overlay, then play."
     />
     <title>Ladder Day</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <main>
-      <header class="page-header">
-        <h1>Ladder Day</h1>
-        <p class="lede">
-          Tiptoe up the ladder: change <strong>one letter</strong> from the <strong>previous</strong> word each hop, and keep it to
-          <strong>real words</strong> only. Keep hopping until you land on the <strong>goal</strong>.
-        </p>
-      </header>
-
       <section class="panel" aria-label="Ladder puzzle">
         <div class="panel-section">
           <div id="puzzle-anchors" class="puzzle-anchors" aria-label="Start and goal words"></div>
@@ -37,7 +29,7 @@
           <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
         </div>
 
-        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <p id="status" class="status hidden" role="status" aria-live="polite"></p>
 
         <div class="difficult-row">
           <button
@@ -69,6 +61,122 @@
         </div>
       </section>
     </main>
+
+    <dialog id="welcome-modal" class="welcome-modal" aria-labelledby="welcome-title">
+      <div class="welcome-modal__surface">
+        <div class="welcome-modal__scroll">
+          <header class="intro-header intro-header--splash">
+            <h1 id="welcome-title">Ladder Day</h1>
+            <p class="landing-hook">
+              Line up five-letter words from <strong>Start</strong> to <strong>Goal</strong>. You only change
+              <strong>one letter</strong> from the previous word each time.
+            </p>
+          </header>
+
+          <section class="intro-panel intro-panel--splash" aria-label="Example ladder">
+            <ol class="intro-chain">
+              <li class="intro-step">
+                <span class="intro-label">Start</span>
+                <span class="intro-word">PLATE</span>
+              </li>
+              <li class="intro-step intro-step--arrow" aria-hidden="true"><span class="intro-arrow">↓</span></li>
+              <li class="intro-step">
+                <span class="intro-label">Step 1</span>
+                <span class="intro-word"><span class="intro-chg">S</span>LATE</span>
+              </li>
+              <li class="intro-step intro-step--arrow" aria-hidden="true"><span class="intro-arrow">↓</span></li>
+              <li class="intro-step">
+                <span class="intro-label">Step 2</span>
+                <span class="intro-word">S<span class="intro-chg">T</span>ATE</span>
+              </li>
+              <li class="intro-step intro-step--arrow" aria-hidden="true"><span class="intro-arrow">↓</span></li>
+              <li class="intro-step">
+                <span class="intro-label">Step 3</span>
+                <span class="intro-word">STA<span class="intro-chg">R</span>E</span>
+              </li>
+              <li class="intro-step intro-step--arrow" aria-hidden="true"><span class="intro-arrow">↓</span></li>
+              <li class="intro-step">
+                <span class="intro-label">Goal</span>
+                <span class="intro-word">S<span class="intro-chg">C</span>ARE</span>
+              </li>
+            </ol>
+
+            <figure class="intro-recording" id="intro-recording" hidden>
+              <video
+                id="intro-howto-video"
+                class="intro-recording__video"
+                controls
+                playsinline
+                preload="metadata"
+                width="960"
+                height="540"
+              >
+                <source src="media/how-to.webm" type="video/webm" />
+                <source src="media/how-to.mp4" type="video/mp4" />
+              </video>
+              <figcaption class="intro-recording-cap">
+                Screen recording from <code>ladderday/media/</code> (optional).
+              </figcaption>
+            </figure>
+          </section>
+
+          <p class="intro-cta-wrap">
+            <button type="button" id="welcome-play" class="intro-play">Play</button>
+          </p>
+        </div>
+      </div>
+    </dialog>
+
     <script type="module" src="js/app.js"></script>
+    <script>
+      (function () {
+        var dialog = document.getElementById("welcome-modal");
+        var main = document.querySelector("main");
+        var playBtn = document.getElementById("welcome-play");
+        var typing = document.getElementById("typing-heading");
+
+        function setMainInert(on) {
+          if (main) main.inert = !!on;
+        }
+
+        function openWelcome() {
+          if (!dialog) return;
+          setMainInert(true);
+          dialog.showModal();
+        }
+
+        function closeWelcome() {
+          if (dialog) dialog.close();
+        }
+
+        if (playBtn) playBtn.addEventListener("click", closeWelcome);
+
+        if (dialog) {
+          dialog.addEventListener("close", function () {
+            setMainInert(false);
+            if (typing && typeof typing.focus === "function") {
+              typing.focus({ preventScroll: true });
+            }
+          });
+        }
+
+        var skipWelcome = location.search.length > 0 || location.hash.length > 0;
+        if (!skipWelcome) openWelcome();
+
+        var wrap = document.getElementById("intro-recording");
+        var video = document.getElementById("intro-howto-video");
+        if (wrap && video) {
+          function showRecording() {
+            wrap.removeAttribute("hidden");
+          }
+          function removeRecording() {
+            wrap.remove();
+          }
+          video.addEventListener("loadeddata", showRecording, { once: true });
+          video.addEventListener("error", removeRecording, { once: true });
+          video.load();
+        }
+      })();
+    </script>
   </body>
 </html>

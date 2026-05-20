@@ -83,18 +83,6 @@ main {
     max(1.5rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-right));
 }
 
-.page-header {
-  margin-bottom: 1.35rem;
-}
-
-.page-header h1 {
-  font-size: clamp(1.35rem, 4vw, 1.6rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 0.5rem;
-  color: var(--text);
-}
-
 .lede {
   margin: 0;
   font-size: 0.95rem;
@@ -106,6 +94,24 @@ main {
 .lede strong {
   color: var(--text);
   font-weight: 600;
+}
+
+.lede-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lede-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.lede-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .panel {
@@ -124,9 +130,13 @@ main {
 
 .puzzle-anchors {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   gap: 0.65rem 1rem;
-  margin: 0 0 0.65rem;
+  margin-bottom: 0.65rem;
   padding: 0.75rem 0.65rem;
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
@@ -178,6 +188,8 @@ main {
 @media (max-width: 360px) {
   .puzzle-anchors {
     grid-template-columns: 1fr;
+    width: 100%;
+    justify-content: stretch;
   }
 }
 
@@ -662,4 +674,204 @@ main {
     gap: 0.45rem;
     padding: 0.5rem 0.45rem;
   }
+}
+
+/* ——— Welcome modal (index.html) + optional recording ——— */
+.welcome-modal .intro-header--splash {
+  text-align: center;
+  margin-bottom: 1.35rem;
+}
+
+.welcome-modal .intro-header--splash h1 {
+  font-size: clamp(1.85rem, 6.5vw, 2.35rem);
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.landing-hook {
+  margin: 0.65rem auto 0;
+  max-width: 28ch;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+  text-wrap: balance;
+}
+
+.landing-hook strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.welcome-modal .intro-panel--splash {
+  margin-bottom: 0.5rem;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.intro-panel {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 1rem 0.95rem 1.1rem;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+
+.intro-chain {
+  --intro-label-col: 4.5rem;
+  --intro-label-word-gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.intro-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0.35rem 0;
+}
+
+.intro-step--arrow {
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0.1rem 0 0.1rem calc(var(--intro-label-col) + var(--intro-label-word-gap));
+}
+
+.intro-arrow {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.intro-label {
+  flex: 0 0 var(--intro-label-col);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.intro-word {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+
+.intro-chg {
+  display: inline-block;
+  padding: 0.05em 0.1em;
+  margin: 0 -0.02em;
+  border-radius: 3px;
+  background: var(--accent-muted);
+  color: var(--accent-hover);
+  box-shadow: inset 0 0 0 1px rgba(122, 184, 245, 0.35);
+}
+
+.intro-cta-wrap {
+  margin: 1.25rem 0 0;
+  text-align: center;
+}
+
+.intro-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  line-height: 1.2;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.intro-play:hover {
+  background: var(--accent-hover);
+}
+
+.intro-play:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Splash: full-text example + optional screen recording */
+.intro-recording {
+  margin: 1rem 0 0;
+}
+
+.intro-recording__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(70vh, 28rem);
+  border-radius: var(--radius-sm);
+  background: #000;
+  border: 1px solid var(--panel-border);
+}
+
+.intro-recording-cap {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.intro-recording-cap code {
+  font-size: 0.85em;
+  color: var(--text-soft);
+}
+
+/* Welcome dialog — width hugs content so the example card isn’t a wide empty strip */
+.welcome-modal {
+  margin: auto;
+  padding: 0;
+  border: none;
+  width: fit-content;
+  max-width: min(22rem, calc(100vw - 1.5rem));
+  color: inherit;
+  background: transparent;
+}
+
+.welcome-modal::backdrop {
+  background: rgba(0, 0, 0, 0.52);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.welcome-modal__surface {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.welcome-modal__scroll {
+  max-height: min(85dvh, 38rem);
+  overflow-y: auto;
+  padding: max(0.85rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right))
+    max(0.95rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+button.intro-play {
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
 }

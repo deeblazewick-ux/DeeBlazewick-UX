@@ -64,8 +64,6 @@ let practiceMode = false;
 let strictShortest = false;
 /** @type {number[] | null} */
 let diffHighlightIndices = null;
-/** @type {number} */
-let progressMsgCount = 0;
 
 function isPracticeFromUrl() {
   return new URLSearchParams(window.location.search).has("practice");
@@ -106,6 +104,11 @@ function setStatusTone(tone) {
 function announce(msg, tone = "neutral") {
   $status.textContent = msg;
   setStatusTone(tone);
+  if (tone === "error") {
+    $status.classList.remove("hidden");
+  } else {
+    $status.classList.add("hidden");
+  }
 }
 
 function clearDiffHighlight() {
@@ -138,11 +141,9 @@ function startGame() {
   chain = [puzzle.start];
   buffer = "";
   won = false;
-  progressMsgCount = 0;
   clearDiffHighlight();
   $btnCopy.classList.add("hidden");
   document.body.classList.toggle("game-won", false);
-  setStatusTone("neutral");
   renderAll();
   announce("", "neutral");
 }
@@ -274,7 +275,7 @@ function submitWord() {
   }
   if (!WORD_SET.has(word)) {
     clearDiffHighlight();
-    announce("That word is not in the game’s word list.", "error");
+    announce("Sorry! I can’t accept that word.", "error");
     return;
   }
   if (chain.includes(word)) {
@@ -329,12 +330,7 @@ function submitWord() {
     document.body.classList.add("game-won");
     $btnCopy.classList.remove("hidden");
   } else {
-    progressMsgCount += 1;
-    if (progressMsgCount === 1) {
-      announce("Nice — keep going toward the goal.", "progress");
-    } else {
-      announce("OK — next.", "progress");
-    }
+    announce("", "neutral");
   }
   renderAll();
   scrollLadderToBottom();
@@ -347,12 +343,13 @@ function undoStep() {
   clearDiffHighlight();
   renderAll();
   scrollLadderToBottom();
-  announce("Undid last step.", "neutral");
+  announce("", "neutral");
   $typingHeading?.focus({ preventScroll: true });
 }
 
 function onKeyLetter(letter) {
   if (won) return;
+  if ($status.classList.contains("status--error")) announce("", "neutral");
   if (buffer.length >= 5) return;
   clearDiffHighlight();
   buffer += letter.toLowerCase();
@@ -362,6 +359,7 @@ function onKeyLetter(letter) {
 
 function onKeyBackspace() {
   if (won) return;
+  if ($status.classList.contains("status--error")) announce("", "neutral");
   clearDiffHighlight();
   buffer = buffer.slice(0, -1);
   renderCurrent();
@@ -404,6 +402,7 @@ async function copyResult() {
 
 window.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.getElementById("welcome-modal")?.matches(":modal")) return;
   if (e.key === "Enter") {
     e.preventDefault();
     onKeyEnter();
@@ -446,7 +445,6 @@ $difficultSwitch?.addEventListener("click", () => {
     chain = [puzzle.start];
     buffer = "";
     clearDiffHighlight();
-    progressMsgCount = 0;
   }
   strictShortest = wantsOn;
   setStrictUrl(strictShortest);
