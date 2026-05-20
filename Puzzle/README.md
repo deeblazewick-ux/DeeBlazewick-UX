@@ -4,7 +4,7 @@ A small **word + grid** puzzle prototype: fill crossing words so every **active 
 
 ## Deploy on GitHub Pages (static site)
 
-This repo includes a workflow [`.github/workflows/deploy-puzzle-github-pages.yml`](../.github/workflows/deploy-puzzle-github-pages.yml) that publishes **only** the `Puzzle/` folder on every push to `main`.
+This repo includes a workflow [`.github/workflows/deploy-puzzle-github-pages.yml`](../.github/workflows/deploy-puzzle-github-pages.yml) that publishes the `Puzzle/` app under the **`/puzzle/`** path on GitHub Pages (plus a small root redirect).
 
 ### One-time GitHub setup
 
@@ -15,9 +15,11 @@ This repo includes a workflow [`.github/workflows/deploy-puzzle-github-pages.yml
 
 Your game will be at:
 
-`https://<your-username>.github.io/<repository-name>/`
+**`https://<your-username>.github.io/<repository-name>/puzzle/`**
 
-(Replace with your GitHub user/org and repo slug — e.g. `https://dee.github.io/DeeBlazewick-UX/`.)
+For this org/repo, that is: **https://deeblazewick-ux.github.io/DeeBlazewick-UX/puzzle/**
+
+The site root (`…/DeeBlazewick-UX/`) redirects to `puzzle/`.
 
 ### Run locally
 

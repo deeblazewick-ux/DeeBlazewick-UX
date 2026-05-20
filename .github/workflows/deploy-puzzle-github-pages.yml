@@ -30,10 +30,17 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      # Site lives at /<repo>/puzzle/ (project Pages base + /puzzle/)
+      - name: Assemble site (puzzle/ + root redirect)
+        run: |
+          mkdir -p _site/puzzle
+          cp -r Puzzle/index.html Puzzle/css Puzzle/js _site/puzzle/
+          cp .github/pages-root/index.html _site/index.html
+
       - name: Upload static artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: Puzzle
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
