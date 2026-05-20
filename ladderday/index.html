@@ -25,10 +25,9 @@
       <section class="panel" aria-label="Ladder puzzle">
         <div class="panel-section">
           <h2 class="section-label">Your path</h2>
-          <div id="ladder-rows" class="ladder-rows" aria-label="Words played so far"></div>
+          <div id="puzzle-anchors" class="puzzle-anchors" aria-label="Start and goal words"></div>
+          <div id="ladder-rows" class="ladder-rows" aria-label="Words played after the start word"></div>
         </div>
-
-        <div id="goal-banner" class="goal-banner" aria-label="Goal word"></div>
 
         <div class="panel-section input-section">
           <h2 id="typing-heading" class="section-label" tabindex="-1">Type the next word</h2>
@@ -38,9 +37,14 @@
 
         <p id="status" class="status" role="status" aria-live="polite"></p>
 
-        <div class="par-hint-row">
-          <button type="button" id="btn-par-hint" class="ghost-btn">Show shortest length</button>
+        <div class="strict-toggle-row">
+          <input type="checkbox" id="strict-shortest" class="strict-toggle-input" />
+          <label for="strict-shortest" class="strict-toggle-label">
+            <span class="strict-toggle-title">Shortest-path mode</span>
+            <span class="strict-toggle-hint">When on, your ladder is capped at the shortest solution length for this puzzle. Turn off for unlimited steps.</span>
+          </label>
         </div>
+
         <p id="par-note" class="par-note" aria-live="polite"></p>
 
         <div class="actions">

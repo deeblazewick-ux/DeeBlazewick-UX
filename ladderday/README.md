@@ -10,9 +10,9 @@ A static **word ladder** puzzle:
 
 **Practice:** `?practice=1` or **Random (practice)**.
 
-**Finished UI preview:** `?demo=won` — solved state for screenshots.
+**Shortest-path mode:** turn on **Shortest-path mode** to cap your ladder at the puzzle’s shortest solution length (same limit for everyone that day). Turn it off for an unlimited number of steps. Optional URL: `?strict=1` to start with the mode on.
 
-**Shortest length:** use **Show shortest length**, or it appears automatically after your first valid step.
+**Finished UI preview:** `?demo=won` — solved state for screenshots.
 
 **Copy result:** after you win, **Copy result** puts a shareable text block on the clipboard.
 

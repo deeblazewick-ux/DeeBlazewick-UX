@@ -56,17 +56,17 @@ function lettersPossibleFromPrev(prev) {
 }
 
 const $ladder = document.getElementById("ladder-rows");
-const $goalBanner = document.getElementById("goal-banner");
+const $anchors = document.getElementById("puzzle-anchors");
 const $current = document.getElementById("current-row");
 const $status = document.getElementById("status");
 const $kbd = document.getElementById("keyboard");
 const $btnUndo = document.getElementById("btn-undo");
 const $btnToday = document.getElementById("btn-today");
 const $btnPractice = document.getElementById("btn-practice");
-const $btnParHint = document.getElementById("btn-par-hint");
 const $btnCopy = document.getElementById("btn-copy");
 const $parNote = document.getElementById("par-note");
 const $typingHeading = document.getElementById("typing-heading");
+const $strictToggle = /** @type {HTMLInputElement | null} */ (document.getElementById("strict-shortest"));
 
 /** @type {{ start: string, goal: string, par: number }} */
 let puzzle = pickDailyPuzzle();
@@ -79,7 +79,7 @@ let won = false;
 /** @type {boolean} */
 let practiceMode = false;
 /** @type {boolean} */
-let shortestHintShown = false;
+let strictShortest = false;
 /** @type {number[] | null} */
 let diffHighlightIndices = null;
 /** @type {number} */
@@ -89,11 +89,26 @@ function isPracticeFromUrl() {
   return new URLSearchParams(window.location.search).has("practice");
 }
 
+function strictFromUrl() {
+  const q = new URLSearchParams(window.location.search);
+  return q.get("strict") === "1" || q.get("shortest") === "1";
+}
+
 function setPractice(on) {
   practiceMode = on;
   const url = new URL(window.location.href);
   if (on) url.searchParams.set("practice", "1");
   else url.searchParams.delete("practice");
+  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+}
+
+function setStrictUrl(on) {
+  const url = new URL(window.location.href);
+  if (on) url.searchParams.set("strict", "1");
+  else {
+    url.searchParams.delete("strict");
+    url.searchParams.delete("shortest");
+  }
   window.history.replaceState({}, "", url.pathname + url.search + url.hash);
 }
 
@@ -115,18 +130,21 @@ function clearDiffHighlight() {
   diffHighlightIndices = null;
 }
 
-function showShortestHintLine() {
-  $parNote.textContent = `Shortest solution length: ${puzzle.par} steps (with this word list).`;
-  shortestHintShown = true;
-  $btnParHint.disabled = true;
-  $btnParHint.textContent = "Shortest length shown";
-}
-
-function maybeRevealShortestAfterStep() {
-  if (shortestHintShown) return;
-  if (chain.length >= 2) {
-    showShortestHintLine();
+function renderStrictNote() {
+  if (won) return;
+  if (!strictShortest) {
+    $parNote.textContent = "";
+    return;
   }
+  const maxEdges = puzzle.par;
+  const used = chain.length - 1;
+  const left = maxEdges - used;
+  if (left <= 0) {
+    $parNote.textContent =
+      "Shortest-path mode: your next word must be the goal — no extra rungs left after the start.";
+    return;
+  }
+  $parNote.textContent = `Shortest-path mode: at most ${maxEdges} one-letter steps after the start for this puzzle. You’ve used ${used}; ${left} step${left === 1 ? "" : "s"} left before you enter the next word.`;
 }
 
 function scrollLadderToBottom() {
@@ -140,12 +158,9 @@ function startGame() {
   chain = [puzzle.start];
   buffer = "";
   won = false;
-  shortestHintShown = false;
   progressMsgCount = 0;
   clearDiffHighlight();
   $parNote.textContent = "";
-  $btnParHint.disabled = false;
-  $btnParHint.textContent = "Show shortest length";
   $btnCopy.classList.add("hidden");
   document.body.classList.toggle("game-won", false);
   setStatusTone("neutral");
@@ -153,17 +168,52 @@ function startGame() {
   announce("Type a word that changes one letter from the last row, then press Enter.");
 }
 
+function renderPuzzleAnchors() {
+  $anchors.className = "puzzle-anchors" + (won ? " puzzle-anchors--won" : "");
+  $anchors.innerHTML = "";
+
+  const startCol = document.createElement("div");
+  startCol.className = "puzzle-anchor puzzle-anchor--start";
+  const startLab = document.createElement("span");
+  startLab.className = "puzzle-anchor-label";
+  startLab.textContent = "Start";
+  const startWord = document.createElement("span");
+  startWord.className = "puzzle-anchor-word";
+  startWord.textContent = puzzle.start.toUpperCase();
+  startCol.append(startLab, startWord);
+
+  const goalCol = document.createElement("div");
+  goalCol.className = "puzzle-anchor puzzle-anchor--goal";
+  const goalLab = document.createElement("span");
+  goalLab.className = "puzzle-anchor-label";
+  goalLab.textContent = won ? "Goal reached" : "Goal";
+  const goalWord = document.createElement("span");
+  goalWord.className = "puzzle-anchor-word";
+  goalWord.textContent = puzzle.goal.toUpperCase();
+  goalCol.append(goalLab, goalWord);
+
+  $anchors.append(startCol, goalCol);
+}
+
 function renderLadder() {
   $ladder.innerHTML = "";
-  for (let i = 0; i < chain.length; i++) {
+  if (chain.length <= 1) {
+    const empty = document.createElement("p");
+    empty.className = "ladder-empty";
+    empty.textContent = "Your next words will show here after you press Enter.";
+    $ladder.appendChild(empty);
+    return;
+  }
+  for (let i = 1; i < chain.length; i++) {
     const row = document.createElement("div");
-    row.className = "ladder-row" + (i === 0 ? " start-row" : "");
+    row.className = "ladder-row";
+    if (i === 1) row.classList.add("ladder-row--first-step");
     if (won && i === chain.length - 1 && chain[i] === puzzle.goal) {
       row.classList.add("ladder-row--goal-done");
     }
     const label = document.createElement("span");
     label.className = "row-label";
-    label.textContent = i === 0 ? "Start" : String(i);
+    label.textContent = String(i);
     const word = document.createElement("span");
     word.className = "row-word";
     word.textContent = chain[i].toUpperCase();
@@ -171,35 +221,6 @@ function renderLadder() {
     row.appendChild(word);
     $ladder.appendChild(row);
   }
-}
-
-function renderGoalBanner() {
-  const last = chain[chain.length - 1];
-  if (last === puzzle.goal && won) {
-    $goalBanner.classList.remove("hidden");
-    $goalBanner.classList.add("goal-banner--done");
-    $goalBanner.innerHTML = "";
-    const lab = document.createElement("span");
-    lab.className = "goal-label";
-    lab.textContent = "Goal reached";
-    const w = document.createElement("span");
-    w.className = "goal-word";
-    w.textContent = puzzle.goal.toUpperCase();
-    $goalBanner.appendChild(lab);
-    $goalBanner.appendChild(w);
-    return;
-  }
-  $goalBanner.classList.remove("goal-banner--done");
-  $goalBanner.classList.remove("hidden");
-  $goalBanner.innerHTML = "";
-  const lab = document.createElement("span");
-  lab.className = "goal-label";
-  lab.textContent = "Goal";
-  const w = document.createElement("span");
-  w.className = "goal-word";
-  w.textContent = puzzle.goal.toUpperCase();
-  $goalBanner.appendChild(lab);
-  $goalBanner.appendChild(w);
 }
 
 function renderCurrent() {
@@ -221,11 +242,16 @@ function renderCurrent() {
 }
 
 function renderAll() {
+  renderPuzzleAnchors();
   renderLadder();
-  renderGoalBanner();
   renderCurrent();
   renderKeyboard();
   $btnUndo.disabled = won || chain.length <= 1;
+  if ($strictToggle) {
+    $strictToggle.disabled = won;
+    $strictToggle.checked = strictShortest;
+  }
+  renderStrictNote();
 }
 
 function renderKeyboard() {
@@ -306,6 +332,14 @@ function submitWord() {
     return;
   }
 
+  if (strictShortest && chain.length > puzzle.par) {
+    announce(
+      `Shortest-path mode allows only ${puzzle.par} one-letter steps after the start for this puzzle. Undo a step or turn the mode off.`,
+      "error"
+    );
+    return;
+  }
+
   clearDiffHighlight();
   chain.push(word);
   buffer = "";
@@ -313,12 +347,14 @@ function submitWord() {
   if (word === puzzle.goal) {
     won = true;
     const steps = chain.length - 1;
-    $parNote.textContent = `Your steps: ${steps}. Shortest possible (with this word list): ${puzzle.par}.`;
-    announce(steps === puzzle.par ? "Perfect — shortest ladder!" : "You reached the goal.", "success");
+    if (strictShortest) {
+      $parNote.textContent = `You reached the goal in ${steps} steps with shortest-path mode on.`;
+      announce("You solved it within the shortest-path limit.", "success");
+    } else {
+      $parNote.textContent = `You reached the goal in ${steps} steps.`;
+      announce(steps === puzzle.par ? "You reached the goal — and matched the minimum steps for this puzzle." : "You reached the goal.", "success");
+    }
     document.body.classList.add("game-won");
-    shortestHintShown = true;
-    $btnParHint.disabled = true;
-    $btnParHint.textContent = "Shortest length shown";
     $btnCopy.classList.remove("hidden");
   } else {
     progressMsgCount += 1;
@@ -327,7 +363,6 @@ function submitWord() {
     } else {
       announce("OK — next.", "progress");
     }
-    maybeRevealShortestAfterStep();
   }
   renderAll();
   scrollLadderToBottom();
@@ -381,7 +416,8 @@ function buildShareText() {
     const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
     head = `Ladder Day ${iso} (UTC)`;
   }
-  return `${head}\n${line}\n${steps} steps · shortest: ${puzzle.par}`;
+  const mode = strictShortest ? " · shortest-path mode" : "";
+  return `${head}\n${line}\n${steps} steps${mode}`;
 }
 
 async function copyResult() {
@@ -424,9 +460,32 @@ $btnPractice.addEventListener("click", () => {
   startGame();
 });
 
-$btnParHint.addEventListener("click", () => {
-  if (shortestHintShown) return;
-  showShortestHintLine();
+$strictToggle?.addEventListener("change", () => {
+  if (!$strictToggle) return;
+  const on = $strictToggle.checked;
+  if (on && chain.length > 1) {
+    if (
+      !window.confirm(
+        "Turning on shortest-path mode clears your ladder back to the start word for this puzzle. Continue?"
+      )
+    ) {
+      $strictToggle.checked = false;
+      return;
+    }
+    chain = [puzzle.start];
+    buffer = "";
+    clearDiffHighlight();
+    progressMsgCount = 0;
+  }
+  strictShortest = on;
+  setStrictUrl(on);
+  announce(
+    strictShortest
+      ? "Shortest-path mode is on — extra rungs past the limit are blocked."
+      : "Shortest-path mode is off — you can use as many steps as you like.",
+    "neutral"
+  );
+  renderAll();
 });
 
 $btnCopy.addEventListener("click", () => {
@@ -444,19 +503,24 @@ function loadDemoWon() {
   buffer = "";
   won = true;
   practiceMode = false;
-  shortestHintShown = true;
+  strictShortest = false;
   clearDiffHighlight();
-  $parNote.textContent = `Your steps: ${chain.length - 1}. Shortest possible (with this word list): ${puzzle.par}.`;
-  $btnParHint.disabled = true;
-  $btnParHint.textContent = "Shortest length shown";
+  $parNote.textContent = "You reached the goal in 4 steps.";
   $btnCopy.classList.remove("hidden");
   document.body.classList.add("game-won");
+  if ($strictToggle) {
+    $strictToggle.checked = false;
+    $strictToggle.disabled = true;
+  }
   renderAll();
-  announce("Perfect — shortest ladder!", "success");
+  announce("You reached the goal — and matched the minimum steps for this puzzle.", "success");
   scrollLadderToBottom();
 }
 
 practiceMode = isPracticeFromUrl();
+strictShortest = strictFromUrl();
+if ($strictToggle) $strictToggle.checked = strictShortest;
+
 if (isDemoWonFromUrl()) {
   loadDemoWon();
 } else {

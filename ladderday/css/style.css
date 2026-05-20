@@ -14,7 +14,7 @@
   --accent-ink: #0a1522;
   --goal-bg: rgba(94, 163, 232, 0.12);
   --goal-border: rgba(122, 184, 245, 0.38);
-  --goal-text: #a8d4ff;
+  --goal-text: #dceeff;
   --success: #8fd4a2;
   --success-muted: rgba(143, 212, 162, 0.18);
   --error: #f0a0a8;
@@ -122,8 +122,63 @@ main {
   margin-bottom: 0.25rem;
 }
 
-.panel-section + .goal-banner {
-  margin-top: 0.5rem;
+.puzzle-anchors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem 1rem;
+  margin: 0 0 0.65rem;
+  padding: 0.75rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--panel-border);
+}
+
+.puzzle-anchors--won {
+  border-color: rgba(143, 212, 162, 0.45);
+  background: var(--success-muted);
+}
+
+.puzzle-anchor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.puzzle-anchor-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.puzzle-anchor-word {
+  font-family: var(--mono);
+  font-size: clamp(1.2rem, 5.5vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+.puzzle-anchor--goal .puzzle-anchor-label {
+  color: var(--goal-text);
+}
+
+.puzzle-anchor--goal .puzzle-anchor-word {
+  color: #f0f7ff;
+}
+
+.puzzle-anchors--won .puzzle-anchor--goal .puzzle-anchor-label {
+  color: var(--success);
+}
+
+@media (max-width: 360px) {
+  .puzzle-anchors {
+    grid-template-columns: 1fr;
+  }
 }
 
 .section-label {
@@ -156,6 +211,16 @@ main {
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  min-height: 2.5rem;
+}
+
+.ladder-empty {
+  margin: 0;
+  padding: 0.85rem 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .ladder-rows::-webkit-scrollbar {
@@ -181,7 +246,7 @@ main {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.ladder-row.start-row {
+.ladder-row--first-step {
   border-color: rgba(94, 163, 232, 0.35);
   background: var(--accent-muted);
 }
@@ -207,54 +272,6 @@ main {
   letter-spacing: 0.06em;
   color: var(--text);
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-  min-width: 0;
-}
-
-.goal-banner {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 1rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: var(--radius-sm);
-  background: var(--goal-bg);
-  border: 1px solid var(--goal-border);
-  min-width: 0;
-}
-
-.goal-banner.hidden {
-  display: none;
-}
-
-.goal-banner--done {
-  background: var(--success-muted);
-  border-color: rgba(143, 212, 162, 0.45);
-}
-
-.goal-banner--done .goal-label {
-  color: var(--success);
-}
-
-.goal-banner--done .goal-word {
-  color: var(--text);
-}
-
-.goal-label {
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--goal-text);
-  font-weight: 700;
-}
-
-.goal-word {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: clamp(1.1rem, 3.8vw, 1.25rem);
-  letter-spacing: 0.06em;
-  color: var(--goal-text);
   overflow-wrap: anywhere;
   min-width: 0;
 }
@@ -419,37 +436,50 @@ main {
   border-color: rgba(158, 197, 240, 0.22);
 }
 
-.par-hint-row {
-  margin-top: 0.5rem;
-}
-
-.ghost-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 100%;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.75rem;
-  font-family: var(--font);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-soft);
-  background: transparent;
+.strict-toggle-row {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.12);
   border: 1px solid var(--cell-border);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  touch-action: manipulation;
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
 }
 
-.ghost-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
+.strict-toggle-input {
+  margin: 0.2rem 0 0;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.strict-toggle-input:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.strict-toggle-label {
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.strict-toggle-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--text);
 }
 
-.ghost-btn:disabled {
-  opacity: 0.55;
-  cursor: default;
+.strict-toggle-hint {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .par-note {
