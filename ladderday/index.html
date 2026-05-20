@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Ladder Day: change one letter at a time from a start word to a goal word — every step must be a real word."
+    />
+    <title>Ladder Day</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Ladder Day</h1>
+        <p class="tagline">
+          Build a <strong>word ladder</strong>: each new word must be in the list, must differ from the word
+          <strong>above it by exactly one letter</strong>, and you must end on the <strong>goal</strong> word.
+        </p>
+        <p id="mode-label" class="mode" aria-live="polite"></p>
+      </header>
+
+      <section class="panel" aria-label="Ladder puzzle">
+        <div id="ladder-rows" class="ladder-rows" aria-label="Your ladder so far"></div>
+
+        <div id="goal-banner" class="goal-banner" aria-label="Goal word"></div>
+
+        <h2 class="input-heading">Next word</h2>
+        <div id="current-row" class="row current-wrap" role="group" aria-label="Current typing"></div>
+
+        <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <p id="par-note" class="par-note" aria-live="polite"></p>
+
+        <div class="actions">
+          <button type="button" id="btn-undo" class="secondary">Undo last step</button>
+          <button type="button" id="btn-today">Today’s ladder</button>
+          <button type="button" id="btn-practice">Random (practice)</button>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Not affiliated with Wordle. Words live in <code>js/words.js</code>; daily pairs in
+          <code>js/puzzles.js</code>.
+        </p>
+        <p><a href="../">← All prototypes</a></p>
+      </footer>
+    </main>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
