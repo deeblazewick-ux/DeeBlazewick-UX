@@ -4,22 +4,22 @@ A small **word + grid** puzzle prototype: fill crossing words so every **active 
 
 ## Deploy on GitHub Pages (static site)
 
-This repo includes a workflow [`.github/workflows/deploy-puzzle-github-pages.yml`](../.github/workflows/deploy-puzzle-github-pages.yml) that publishes the `Puzzle/` app under the **`/puzzle/`** path on GitHub Pages (plus a small root redirect).
+This repo includes a workflow [`.github/workflows/deploy-puzzle-github-pages.yml`](../.github/workflows/deploy-puzzle-github-pages.yml) that publishes static apps under **`/puzzle/`** and **`/antiwordle/`** on GitHub Pages (plus a small hub at the site root).
 
 ### One-time GitHub setup
 
-1. Push `main` with the workflow and `Puzzle/` files (commit and `git push`).
+1. Push `main` with the workflow and app folders (`Puzzle/`, `antiwordle/`).
 2. On GitHub: **Settings → Pages → Build and deployment**.
 3. Under **Source**, choose **GitHub Actions** (not “Deploy from a branch”).
-4. Open the **Actions** tab and confirm the “Deploy Puzzle to GitHub Pages” workflow completes (green).
+4. Open the **Actions** tab and confirm the “Deploy prototypes to GitHub Pages” workflow completes (green).
 
-Your game will be at:
+Your games will be at:
 
-**`https://<your-username>.github.io/<repository-name>/puzzle/`**
+**`https://<your-username>.github.io/<repository-name>/puzzle/`** and **`…/antiwordle/`**
 
-For this org/repo, that is: **https://deeblazewick-ux.github.io/DeeBlazewick-UX/puzzle/**
+For this org/repo, that is: **https://deeblazewick-ux.github.io/DeeBlazewick-UX/puzzle/** and **https://deeblazewick-ux.github.io/DeeBlazewick-UX/antiwordle/**
 
-The site root (`…/DeeBlazewick-UX/`) redirects to `puzzle/`.
+The site root (`…/DeeBlazewick-UX/`) lists prototypes: **`puzzle/`** (Constraint Cross) and **`antiwordle/`** (Anti-Wordle).
 
 ### Run locally
 

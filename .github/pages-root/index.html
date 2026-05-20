@@ -2,12 +2,69 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=puzzle/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Constraint Cross</title>
-    <link rel="canonical" href="./puzzle/" />
+    <title>DeeBlazewick UX — prototypes</title>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --text: #e7ecf1;
+        --muted: #8b9aab;
+        --link: #3ecf8e;
+        --link2: #ff6b9d;
+        --font: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        padding: 2rem 1.25rem;
+      }
+      main {
+        max-width: 32rem;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 1.25rem;
+        font-weight: 650;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin: 0 0 1.25rem;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      li {
+        margin-bottom: 0.75rem;
+      }
+      a {
+        color: var(--link);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      a.alt {
+        color: var(--link2);
+      }
+    </style>
   </head>
   <body>
-    <p><a href="puzzle/">Open Constraint Cross</a></p>
+    <main>
+      <h1>Prototypes</h1>
+      <p>Pick an app (GitHub Pages).</p>
+      <ul>
+        <li><a href="puzzle/">Constraint Cross</a> — word grid + constraint clues</li>
+        <li><a class="alt" href="antiwordle/">Anti-Wordle</a> — pattern + letter reveals</li>
+      </ul>
+    </main>
   </body>
 </html>

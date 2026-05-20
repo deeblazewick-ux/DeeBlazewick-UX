@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Anti-Wordle: see consonant/vowel pattern; wrong guesses reveal one true letter." />
+    <title>Anti-Wordle</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Anti-Wordle</h1>
+        <p class="tagline">
+          You always see the answer’s <strong>consonant / vowel pattern</strong>. You never get green-yellow tiles.
+          Each <strong>wrong</strong> guess reveals the <strong>leftmost</strong> still-hidden letter of the real word.
+        </p>
+        <p id="mode-label" class="mode" aria-live="polite"></p>
+      </header>
+
+      <section class="panel" aria-label="Puzzle">
+        <h2 class="sr-only">Pattern and known letters</h2>
+        <div class="strip-label">Pattern</div>
+        <div id="pattern-strip" class="pattern-strip" role="group" aria-label="Consonant and vowel pattern"></div>
+
+        <div class="strip-label">Revealed from the answer</div>
+        <div id="revealed-row" class="row revealed-wrap" role="group" aria-label="Known letters by position"></div>
+
+        <div class="strip-label">Your current guess</div>
+        <div id="current-row" class="row current-wrap" role="group" aria-label="Current typing"></div>
+
+        <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+
+        <div class="actions">
+          <button type="button" id="btn-today" class="secondary">Today’s word</button>
+          <button type="button" id="btn-new-random">New random (practice)</button>
+        </div>
+
+        <div class="history-block">
+          <h2 class="history-title">Guesses</h2>
+          <ol id="guess-history" class="guess-history" aria-label="Previous guesses"></ol>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Not affiliated with Wordle or the NY Times. Words are a small curated list — expand
+          <code>js/words.js</code> for more variety.
+        </p>
+        <p><a href="../">← All prototypes</a></p>
+      </footer>
+    </main>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

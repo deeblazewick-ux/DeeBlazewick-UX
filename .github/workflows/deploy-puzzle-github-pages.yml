@@ -1,7 +1,7 @@
-# Deploy /Puzzle to GitHub Pages (static site).
+# Deploy static prototypes (/puzzle, /antiwordle) to GitHub Pages.
 # After first push: Repo → Settings → Pages → Build: GitHub Actions.
 
-name: Deploy Puzzle to GitHub Pages
+name: Deploy prototypes to GitHub Pages
 
 on:
   push:
@@ -30,11 +30,13 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # Site lives at /<repo>/puzzle/ (project Pages base + /puzzle/)
-      - name: Assemble site (puzzle/ + root redirect)
+      # Site lives at /<repo>/puzzle/ and /<repo>/antiwordle/
+      - name: Assemble site (puzzle + antiwordle + hub)
         run: |
-          mkdir -p _site/puzzle
+          mkdir -p _site/puzzle _site/antiwordle _site/anti-wordle
           cp -r Puzzle/index.html Puzzle/css Puzzle/js _site/puzzle/
+          cp -r antiwordle/index.html antiwordle/css antiwordle/js _site/antiwordle/
+          cp .github/pages-redirect-anti-wordle/index.html _site/anti-wordle/index.html
           cp .github/pages-root/index.html _site/index.html
 
       - name: Upload static artifact
