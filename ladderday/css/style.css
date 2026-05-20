@@ -391,15 +391,6 @@ main {
   text-transform: none;
 }
 
-.kbd-key--dim {
-  opacity: 0.38;
-  cursor: default;
-}
-
-.kbd-key--dim:hover {
-  background: var(--key-bg);
-}
-
 .status {
   min-height: 2.75rem;
   margin: 1rem 0 0;

@@ -38,23 +38,6 @@ function hamming(a, b) {
   return d;
 }
 
-/** Letters that appear in at least one valid one-step neighbor of `prev`. */
-function lettersPossibleFromPrev(prev) {
-  const letters = new Set();
-  const arr = [...prev];
-  for (let i = 0; i < 5; i++) {
-    const orig = arr[i];
-    for (let c = 97; c <= 122; c++) {
-      const ch = String.fromCharCode(c);
-      if (ch === orig) continue;
-      arr[i] = ch;
-      if (WORD_SET.has(arr.join(""))) letters.add(ch);
-      arr[i] = orig;
-    }
-  }
-  return letters;
-}
-
 const $ladder = document.getElementById("ladder-rows");
 const $anchors = document.getElementById("puzzle-anchors");
 const $current = document.getElementById("current-row");
@@ -255,9 +238,6 @@ function renderAll() {
 }
 
 function renderKeyboard() {
-  const prev = chain.length ? chain[chain.length - 1] : puzzle.start;
-  const possible = won || prev.length !== 5 ? null : lettersPossibleFromPrev(prev);
-
   const rows = [
     ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
     ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
@@ -283,10 +263,6 @@ function renderKeyboard() {
       } else {
         btn.textContent = key.toUpperCase();
         btn.dataset.letter = key;
-        if (possible && buffer.length === 0 && !possible.has(key)) {
-          btn.classList.add("kbd-key--dim");
-          btn.setAttribute("aria-label", `${key.toUpperCase()} (no one-step word from last row uses this letter)`);
-        }
         btn.addEventListener("click", () => onKeyLetter(key));
       }
       div.appendChild(btn);
