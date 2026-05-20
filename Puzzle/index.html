@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Constraint Cross — prototype</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Constraint Cross</h1>
+        <p id="puzzle-title">Loading…</p>
+      </header>
+
+      <section class="panel" aria-label="Puzzle">
+        <ul id="clues" class="clues"></ul>
+        <div class="grid-wrap">
+          <div id="grid" class="grid" role="grid" aria-label="Letter grid"></div>
+        </div>
+        <div class="actions">
+          <button type="button" id="btn-check">Check</button>
+          <button type="button" class="secondary" id="btn-clear">Clear fills</button>
+        </div>
+        <p id="status" class="status" role="status"></p>
+        <div class="puzzle-picker">
+          <label for="puzzle-select">Puzzle</label>
+          <select id="puzzle-select" aria-label="Choose puzzle"></select>
+        </div>
+      </section>
+
+      <footer>
+        Prototype: crossing five-letter words with constraint-style clues. Not affiliated with any published puzzle app.
+      </footer>
+    </main>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
