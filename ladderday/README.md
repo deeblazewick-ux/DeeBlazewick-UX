@@ -10,13 +10,15 @@ A static **word ladder** puzzle:
 
 **Practice:** `?practice=1` or **Random (practice)**.
 
+**Finished UI preview:** open `http://localhost:5176/?demo=won` (after starting the server below) to see a solved ladder, success styling, and the step / par summary.
+
 ## Run locally
 
 ```bash
-cd ladderday && python3 -m http.server 5175
+cd ladderday && python3 -m http.server 5176
 ```
 
-Open [http://localhost:5175](http://localhost:5175).
+Open [http://localhost:5176](http://localhost:5176).
 
 ## Customize
 

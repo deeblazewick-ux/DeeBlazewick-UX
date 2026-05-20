@@ -260,6 +260,24 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+function isDemoWonFromUrl() {
+  return new URLSearchParams(window.location.search).get("demo") === "won";
+}
+
+/** Preview a solved ladder (for screenshots / UX checks). Path is valid in `words.js`. */
+function loadDemoWon() {
+  puzzle = { start: "plate", goal: "scare", par: 4 };
+  chain = ["plate", "slate", "state", "stare", "scare"];
+  buffer = "";
+  won = true;
+  practiceMode = false;
+  $mode.textContent = "Demo · finished puzzle (?demo=won)";
+  $parNote.textContent = `Your steps: ${chain.length - 1}. Shortest possible (with this word list): ${puzzle.par}.`;
+  document.body.classList.add("game-won");
+  renderAll();
+  announce("Perfect — shortest ladder!");
+}
+
 $btnUndo.addEventListener("click", undoStep);
 $btnToday.addEventListener("click", () => {
   setPractice(false);
@@ -272,4 +290,8 @@ $btnPractice.addEventListener("click", () => {
 
 practiceMode = isPracticeFromUrl();
 buildKeyboard();
-startGame();
+if (isDemoWonFromUrl()) {
+  loadDemoWon();
+} else {
+  startGame();
+}
