@@ -59,7 +59,6 @@ const $ladder = document.getElementById("ladder-rows");
 const $goalBanner = document.getElementById("goal-banner");
 const $current = document.getElementById("current-row");
 const $status = document.getElementById("status");
-const $mode = document.getElementById("mode-label");
 const $kbd = document.getElementById("keyboard");
 const $btnUndo = document.getElementById("btn-undo");
 const $btnToday = document.getElementById("btn-today");
@@ -144,7 +143,6 @@ function startGame() {
   shortestHintShown = false;
   progressMsgCount = 0;
   clearDiffHighlight();
-  $mode.textContent = practiceMode ? "Practice · random start & goal" : "Daily puzzle · same for everyone (UTC)";
   $parNote.textContent = "";
   $btnParHint.disabled = false;
   $btnParHint.textContent = "Show shortest length";
@@ -448,7 +446,6 @@ function loadDemoWon() {
   practiceMode = false;
   shortestHintShown = true;
   clearDiffHighlight();
-  $mode.textContent = "Demo · finished puzzle (?demo=won)";
   $parNote.textContent = `Your steps: ${chain.length - 1}. Shortest possible (with this word list): ${puzzle.par}.`;
   $btnParHint.disabled = true;
   $btnParHint.textContent = "Shortest length shown";
