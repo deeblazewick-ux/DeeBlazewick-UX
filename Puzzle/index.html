@@ -11,6 +11,7 @@
       <header>
         <h1>Constraint Cross</h1>
         <p id="puzzle-title">Loading…</p>
+        <p id="puzzle-subtitle" class="subtitle" aria-live="polite"></p>
       </header>
 
       <section class="panel" aria-label="Puzzle">
@@ -23,9 +24,15 @@
           <button type="button" class="secondary" id="btn-clear">Clear fills</button>
         </div>
         <p id="status" class="status" role="status"></p>
-        <div class="puzzle-picker">
-          <label for="puzzle-select">Puzzle</label>
-          <select id="puzzle-select" aria-label="Choose puzzle"></select>
+        <div class="puzzle-pickers" role="group" aria-label="Puzzle and difficulty">
+          <div class="picker-field">
+            <label for="puzzle-select">Puzzle by category</label>
+            <select id="puzzle-select" aria-label="Choose puzzle"></select>
+          </div>
+          <div class="picker-field">
+            <label for="difficulty-select">Difficulty</label>
+            <select id="difficulty-select" aria-label="Choose difficulty"></select>
+          </div>
         </div>
       </section>
 

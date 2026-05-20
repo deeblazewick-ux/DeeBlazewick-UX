@@ -49,6 +49,13 @@ header p {
   color: var(--muted);
 }
 
+header p.subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  opacity: 0.95;
+}
+
 .panel {
   background: var(--panel);
   border-radius: 14px;
@@ -187,23 +194,52 @@ button.secondary:hover {
   color: var(--error);
 }
 
-.puzzle-picker {
+.puzzle-pickers {
   margin-top: 1.25rem;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-end;
+  gap: 1rem;
   flex-wrap: wrap;
   font-size: 0.85rem;
   color: var(--muted);
 }
 
-.puzzle-picker select {
+.picker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: min(100%, 200px);
+  flex: 1 1 160px;
+}
+
+.picker-field label {
+  font-weight: 500;
+}
+
+.puzzle-pickers select {
   font: inherit;
   padding: 0.35rem 0.6rem;
   border-radius: 8px;
   border: 1px solid var(--cell-border);
   background: var(--blocked);
   color: var(--text);
+  width: 100%;
+}
+
+/* Tighter cells when the grid has more columns */
+.grid[data-cols="6"] .cell,
+.grid[data-cols="7"] .cell {
+  width: clamp(36px, 10vw, 48px);
+  height: clamp(36px, 10vw, 48px);
+  font-size: clamp(0.95rem, 3.2vw, 1.15rem);
+}
+
+.grid[data-rows="6"] .cell,
+.grid[data-rows="7"] .cell,
+.grid[data-rows="8"] .cell {
+  width: clamp(36px, 10vw, 48px);
+  height: clamp(36px, 10vw, 48px);
+  font-size: clamp(0.95rem, 3.2vw, 1.15rem);
 }
 
 footer {

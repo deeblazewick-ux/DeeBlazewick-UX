@@ -33,6 +33,25 @@ Then open [http://localhost:5173](http://localhost:5173).
 
 Or open `index.html` directly in a browser (some browsers restrict module imports on `file://`; the server method is preferred).
 
+## Puzzle categories
+
+Categories are defined in [`js/puzzles.js`](js/puzzles.js):
+
+1. Add an entry to **`PUZZLE_CATEGORIES`** (use a short `id` and a human `label`).
+2. On each puzzle object, set **`category: "your-id"`** so it appears under that group in the menu.
+
+Puzzles with an unknown `category` show under **Other**.
+
+## Difficulty (per-puzzle variants)
+
+Each puzzle **family** in [`js/puzzles.js`](js/puzzles.js) has a **`variants`** object: `easy`, optional `medium`, optional `hard`. The **Difficulty** menu only lists keys that exist for the selected puzzle.
+
+1. Keep **`DIFFICULTIES`** in sync if you add a new tier id (ordered labels for the UI).
+2. Under a family, add e.g. **`variants.medium`** with the same shape as **`variants.easy`**: `layout`, `solution`, `clues`, `slots`.
+3. **Grid shape:** every row in `layout` / `solution` must be the **same length** (rectangular grids are OK, e.g. `6` rows × `5` columns). The app derives size from the strings—there is no separate `size` field.
+
+Switching **Puzzle** resets difficulty to the first available tier (usually Easy). Switching **Difficulty** keeps the same puzzle and reloads the variant.
+
 ## Controls
 
 - **Click** a cell, **type** letters (A–Z). **Backspace** clears.
