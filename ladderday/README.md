@@ -10,7 +10,7 @@ A static **word ladder** puzzle:
 
 **Practice:** `?practice=1` or **Random (practice)**.
 
-**Shortest-path mode:** turn on **Shortest-path mode** to cap your ladder at the puzzle’s shortest solution length (same limit for everyone that day). Turn it off for an unlimited number of steps. Optional URL: `?strict=1` to start with the mode on.
+**Difficult mode:** turn on **Difficult mode** to cap your ladder at this puzzle’s shortest solution length (same limit for everyone on that day’s puzzle). Turn it off for unlimited steps. Optional URL: `?strict=1` to start with difficult mode on.
 
 **Finished UI preview:** `?demo=won` — solved state for screenshots.
 
@@ -24,7 +24,7 @@ cd ladderday && python3 -m http.server 5176
 
 Open [http://localhost:5176](http://localhost:5176) on your phone (same Wi‑Fi as your computer) or deploy to Pages.
 
-The layout uses safe areas, flexible letter tiles, and a keyboard that scales on narrow screens.
+The layout uses safe areas and flexible letter tiles. **Wide screens:** on-screen QWERTY plus physical keyboard. **Narrow screens (typical phones):** the on-screen keyboard is hidden — tap the **letter tiles** to use your **system keyboard** (typing fills the tiles).
 
 ## Customize
 

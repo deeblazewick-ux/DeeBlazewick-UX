@@ -41,15 +41,16 @@ function hamming(a, b) {
 const $ladder = document.getElementById("ladder-rows");
 const $anchors = document.getElementById("puzzle-anchors");
 const $current = document.getElementById("current-row");
+const $currentEntry = document.getElementById("current-entry");
 const $status = document.getElementById("status");
 const $kbd = document.getElementById("keyboard");
+const $wordInput = /** @type {HTMLInputElement | null} */ (document.getElementById("word-input"));
 const $btnUndo = document.getElementById("btn-undo");
 const $btnToday = document.getElementById("btn-today");
 const $btnPractice = document.getElementById("btn-practice");
 const $btnCopy = document.getElementById("btn-copy");
-const $parNote = document.getElementById("par-note");
 const $typingHeading = document.getElementById("typing-heading");
-const $strictToggle = /** @type {HTMLInputElement | null} */ (document.getElementById("strict-shortest"));
+const $difficultSwitch = /** @type {HTMLButtonElement | null} */ (document.getElementById("difficult-mode"));
 
 /** @type {{ start: string, goal: string, par: number }} */
 let puzzle = pickDailyPuzzle();
@@ -67,6 +68,23 @@ let strictShortest = false;
 let diffHighlightIndices = null;
 /** @type {number} */
 let progressMsgCount = 0;
+
+/** Match phones / narrow layouts where we use the device keyboard instead of the on-screen one. */
+const mqNarrow = window.matchMedia("(max-width: 639px)");
+
+function isNarrowViewport() {
+  return mqNarrow.matches;
+}
+
+mqNarrow.addEventListener("change", () => {
+  renderAll();
+});
+
+function syncWordInputFromBuffer() {
+  if (!$wordInput) return;
+  if ($wordInput.value !== buffer) $wordInput.value = buffer;
+  $wordInput.disabled = won;
+}
 
 function isPracticeFromUrl() {
   return new URLSearchParams(window.location.search).has("practice");
@@ -113,21 +131,19 @@ function clearDiffHighlight() {
   diffHighlightIndices = null;
 }
 
-function renderStrictNote() {
-  if (won) return;
-  if (!strictShortest) {
-    $parNote.textContent = "";
-    return;
-  }
-  const maxEdges = puzzle.par;
-  const used = chain.length - 1;
-  const left = maxEdges - used;
-  if (left <= 0) {
-    $parNote.textContent =
-      "Shortest-path mode: your next word must be the goal — no extra rungs left after the start.";
-    return;
-  }
-  $parNote.textContent = `Shortest-path mode: at most ${maxEdges} one-letter steps after the start for this puzzle. You’ve used ${used}; ${left} step${left === 1 ? "" : "s"} left before you enter the next word.`;
+function renderDifficultHint() {
+  const hint = document.getElementById("difficult-hint");
+  if (!hint) return;
+  const n = puzzle.par;
+  const stepWord = n === 1 ? "step" : "steps";
+  hint.textContent = `Challenge yourself: reach the goal in at most ${n} one-letter ${stepWord} (this puzzle’s shortest solution).`;
+}
+
+function syncDifficultSwitch() {
+  if (!$difficultSwitch) return;
+  $difficultSwitch.setAttribute("aria-checked", strictShortest ? "true" : "false");
+  $difficultSwitch.classList.toggle("difficult-switch--on", strictShortest);
+  $difficultSwitch.disabled = won;
 }
 
 function scrollLadderToBottom() {
@@ -143,12 +159,11 @@ function startGame() {
   won = false;
   progressMsgCount = 0;
   clearDiffHighlight();
-  $parNote.textContent = "";
   $btnCopy.classList.add("hidden");
   document.body.classList.toggle("game-won", false);
   setStatusTone("neutral");
   renderAll();
-  announce("Type a word that changes one letter from the last row, then press Enter.");
+  announce("", "neutral");
 }
 
 function renderPuzzleAnchors() {
@@ -183,7 +198,7 @@ function renderLadder() {
   if (chain.length <= 1) {
     const empty = document.createElement("p");
     empty.className = "ladder-empty";
-    empty.textContent = "Your next words will show here after you press Enter.";
+    empty.textContent = "Words you play appear here.";
     $ladder.appendChild(empty);
     return;
   }
@@ -229,15 +244,17 @@ function renderAll() {
   renderLadder();
   renderCurrent();
   renderKeyboard();
+  syncWordInputFromBuffer();
   $btnUndo.disabled = won || chain.length <= 1;
-  if ($strictToggle) {
-    $strictToggle.disabled = won;
-    $strictToggle.checked = strictShortest;
-  }
-  renderStrictNote();
+  syncDifficultSwitch();
+  renderDifficultHint();
 }
 
 function renderKeyboard() {
+  if (isNarrowViewport()) {
+    $kbd.innerHTML = "";
+    return;
+  }
   const rows = [
     ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
     ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
@@ -305,12 +322,13 @@ function submitWord() {
     $status.setAttribute("aria-live", "assertive");
     setTimeout(() => $status.setAttribute("aria-live", "polite"), 100);
     renderCurrent();
+    syncWordInputFromBuffer();
     return;
   }
 
   if (strictShortest && chain.length > puzzle.par) {
     announce(
-      `Shortest-path mode allows only ${puzzle.par} one-letter steps after the start for this puzzle. Undo a step or turn the mode off.`,
+      `Difficult mode allows only ${puzzle.par} one-letter steps after the start. Undo a step or turn difficult mode off.`,
       "error"
     );
     return;
@@ -324,11 +342,14 @@ function submitWord() {
     won = true;
     const steps = chain.length - 1;
     if (strictShortest) {
-      $parNote.textContent = `You reached the goal in ${steps} steps with shortest-path mode on.`;
-      announce("You solved it within the shortest-path limit.", "success");
+      announce(`You reached the goal in ${steps} steps (difficult mode).`, "success");
     } else {
-      $parNote.textContent = `You reached the goal in ${steps} steps.`;
-      announce(steps === puzzle.par ? "You reached the goal — and matched the minimum steps for this puzzle." : "You reached the goal.", "success");
+      announce(
+        steps === puzzle.par
+          ? `You reached the goal in ${steps} steps — that’s the minimum for this puzzle.`
+          : `You reached the goal in ${steps} steps.`,
+        "success"
+      );
     }
     document.body.classList.add("game-won");
     $btnCopy.classList.remove("hidden");
@@ -342,6 +363,7 @@ function submitWord() {
   }
   renderAll();
   scrollLadderToBottom();
+  if (!won && isNarrowViewport()) $wordInput?.focus({ preventScroll: true });
 }
 
 function undoStep() {
@@ -352,7 +374,8 @@ function undoStep() {
   renderAll();
   scrollLadderToBottom();
   announce("Undid last step.", "neutral");
-  $typingHeading?.focus({ preventScroll: true });
+  if (isNarrowViewport()) $wordInput?.focus({ preventScroll: true });
+  else $typingHeading?.focus({ preventScroll: true });
 }
 
 function onKeyLetter(letter) {
@@ -362,6 +385,7 @@ function onKeyLetter(letter) {
   buffer += letter.toLowerCase();
   renderCurrent();
   renderKeyboard();
+  syncWordInputFromBuffer();
 }
 
 function onKeyBackspace() {
@@ -370,6 +394,7 @@ function onKeyBackspace() {
   buffer = buffer.slice(0, -1);
   renderCurrent();
   renderKeyboard();
+  syncWordInputFromBuffer();
 }
 
 function onKeyEnter() {
@@ -392,7 +417,7 @@ function buildShareText() {
     const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
     head = `Ladder Day ${iso} (UTC)`;
   }
-  const mode = strictShortest ? " · shortest-path mode" : "";
+  const mode = strictShortest ? " · difficult mode" : "";
   return `${head}\n${line}\n${steps} steps${mode}`;
 }
 
@@ -408,6 +433,7 @@ async function copyResult() {
 
 window.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target === $wordInput) return;
   if (e.key === "Enter") {
     e.preventDefault();
     onKeyEnter();
@@ -436,16 +462,15 @@ $btnPractice.addEventListener("click", () => {
   startGame();
 });
 
-$strictToggle?.addEventListener("change", () => {
-  if (!$strictToggle) return;
-  const on = $strictToggle.checked;
-  if (on && chain.length > 1) {
+$difficultSwitch?.addEventListener("click", () => {
+  if (won || !$difficultSwitch) return;
+  const wantsOn = !strictShortest;
+  if (wantsOn && chain.length > 1) {
     if (
       !window.confirm(
-        "Turning on shortest-path mode clears your ladder back to the start word for this puzzle. Continue?"
+        "Turn on Difficult mode? Your ladder will reset to the start word for this puzzle."
       )
     ) {
-      $strictToggle.checked = false;
       return;
     }
     chain = [puzzle.start];
@@ -453,19 +478,35 @@ $strictToggle?.addEventListener("change", () => {
     clearDiffHighlight();
     progressMsgCount = 0;
   }
-  strictShortest = on;
-  setStrictUrl(on);
-  announce(
-    strictShortest
-      ? "Shortest-path mode is on — extra rungs past the limit are blocked."
-      : "Shortest-path mode is off — you can use as many steps as you like.",
-    "neutral"
-  );
+  strictShortest = wantsOn;
+  setStrictUrl(strictShortest);
   renderAll();
 });
 
 $btnCopy.addEventListener("click", () => {
   void copyResult();
+});
+
+function onWordFieldInput() {
+  if (won || !$wordInput) return;
+  clearDiffHighlight();
+  const v = $wordInput.value.toLowerCase().replace(/[^a-z]/g, "").slice(0, 5);
+  if ($wordInput.value !== v) $wordInput.value = v;
+  buffer = v;
+  renderCurrent();
+}
+
+$wordInput?.addEventListener("input", onWordFieldInput);
+$wordInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    onKeyEnter();
+  }
+});
+
+$currentEntry?.addEventListener("click", () => {
+  if (won) return;
+  if (isNarrowViewport()) $wordInput?.focus({ preventScroll: true });
 });
 
 function isDemoWonFromUrl() {
@@ -481,21 +522,15 @@ function loadDemoWon() {
   practiceMode = false;
   strictShortest = false;
   clearDiffHighlight();
-  $parNote.textContent = "You reached the goal in 4 steps.";
   $btnCopy.classList.remove("hidden");
   document.body.classList.add("game-won");
-  if ($strictToggle) {
-    $strictToggle.checked = false;
-    $strictToggle.disabled = true;
-  }
   renderAll();
-  announce("You reached the goal — and matched the minimum steps for this puzzle.", "success");
+  announce("You reached the goal in 4 steps — that’s the minimum for this puzzle.", "success");
   scrollLadderToBottom();
 }
 
 practiceMode = isPracticeFromUrl();
 strictShortest = strictFromUrl();
-if ($strictToggle) $strictToggle.checked = strictShortest;
 
 if (isDemoWonFromUrl()) {
   loadDemoWon();

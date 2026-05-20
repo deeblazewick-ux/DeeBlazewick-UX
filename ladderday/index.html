@@ -10,7 +10,7 @@
     <meta name="color-scheme" content="dark" />
     <meta
       name="description"
-      content="Ladder Day: change one letter at a time from a start word to a goal word — every step must be a real word."
+      content="Ladder Day: tweak one letter from the last word each hop — real words only — hop your way to the goal."
     />
     <title>Ladder Day</title>
     <link rel="stylesheet" href="css/style.css" />
@@ -19,33 +19,60 @@
     <main>
       <header class="page-header">
         <h1>Ladder Day</h1>
-        <p class="lede">Change <strong>one letter</strong> per step. Every step must be a <strong>real word</strong>. Reach the <strong>goal</strong>.</p>
+        <p class="lede">
+          Tiptoe up the ladder: change <strong>one letter</strong> from the <strong>previous</strong> word each hop, and keep it to
+          <strong>real words</strong> only. Keep hopping until you land on the <strong>goal</strong>.
+        </p>
       </header>
 
       <section class="panel" aria-label="Ladder puzzle">
         <div class="panel-section">
-          <h2 class="section-label">Your path</h2>
           <div id="puzzle-anchors" class="puzzle-anchors" aria-label="Start and goal words"></div>
           <div id="ladder-rows" class="ladder-rows" aria-label="Words played after the start word"></div>
         </div>
 
         <div class="panel-section input-section">
           <h2 id="typing-heading" class="section-label" tabindex="-1">Type the next word</h2>
-          <div id="current-row" class="row current-wrap" role="group" aria-label="Current typing"></div>
+          <div id="current-entry" class="current-entry">
+            <div id="current-row" class="row current-wrap" role="group" aria-label="Current typing"></div>
+            <input
+              id="word-input"
+              class="word-input"
+              type="text"
+              inputmode="text"
+              maxlength="5"
+              enterkeyhint="go"
+              autocapitalize="characters"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+              aria-label="Your next five-letter word — use your device keyboard"
+            />
+          </div>
           <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
         </div>
 
         <p id="status" class="status" role="status" aria-live="polite"></p>
 
-        <div class="strict-toggle-row">
-          <input type="checkbox" id="strict-shortest" class="strict-toggle-input" />
-          <label for="strict-shortest" class="strict-toggle-label">
-            <span class="strict-toggle-title">Shortest-path mode</span>
-            <span class="strict-toggle-hint">When on, your ladder is capped at the shortest solution length for this puzzle. Turn off for unlimited steps.</span>
-          </label>
+        <div class="difficult-row">
+          <button
+            type="button"
+            id="difficult-mode"
+            class="difficult-switch"
+            role="switch"
+            aria-checked="false"
+            aria-labelledby="difficult-title"
+            aria-describedby="difficult-hint"
+          >
+            <span class="difficult-switch-track" aria-hidden="true">
+              <span class="difficult-switch-thumb"></span>
+            </span>
+          </button>
+          <div class="difficult-copy">
+            <span id="difficult-title" class="difficult-title">Difficult mode</span>
+            <p id="difficult-hint" class="difficult-hint"></p>
+          </div>
         </div>
-
-        <p id="par-note" class="par-note" aria-live="polite"></p>
 
         <div class="actions">
           <button type="button" id="btn-copy" class="secondary hidden">Copy result</button>
