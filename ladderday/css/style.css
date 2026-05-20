@@ -540,15 +540,6 @@ main {
   margin-top: 1rem;
 }
 
-.actions-row {
-  display: flex;
-  gap: 8px;
-}
-
-.actions-row .primary {
-  flex: 1;
-}
-
 .actions button {
   padding: 0.65rem 0.85rem;
   border-radius: var(--radius-sm);
@@ -581,12 +572,6 @@ main {
 .actions button.secondary:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text);
-}
-
-.actions button.secondary.tight {
-  flex: 0 0 auto;
-  min-width: 5.5rem;
-  min-height: 2.75rem;
 }
 
 .actions button:focus-visible {
@@ -874,4 +859,104 @@ button.intro-play {
   appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
+}
+
+/* Phones / short viewports: keep welcome modal one screen without long inner scroll */
+@media (max-width: 520px) {
+  .welcome-modal__scroll {
+    max-height: min(92svh, 100dvh - 0.75rem);
+    padding: max(0.45rem, env(safe-area-inset-top)) max(0.45rem, env(safe-area-inset-right))
+      max(0.55rem, env(safe-area-inset-bottom)) max(0.45rem, env(safe-area-inset-left));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .welcome-modal .intro-header--splash {
+    margin-bottom: 0.55rem;
+  }
+
+  .welcome-modal .intro-header--splash h1 {
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+  }
+
+  .welcome-modal .landing-hook {
+    margin-top: 0.3rem;
+    font-size: 0.84rem;
+    line-height: 1.38;
+    max-width: 32ch;
+  }
+
+  .welcome-modal .intro-panel--splash {
+    padding: 0.45rem 0.4rem 0.55rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .welcome-modal .intro-chain {
+    --intro-label-col: 3.45rem;
+    --intro-label-word-gap: 0.4rem;
+  }
+
+  .welcome-modal .intro-step {
+    padding: 0.08rem 0;
+    gap: 0.2rem 0.4rem;
+  }
+
+  .welcome-modal .intro-step--arrow {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .welcome-modal .intro-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.03em;
+  }
+
+  .welcome-modal .intro-word {
+    font-size: 0.84rem;
+    letter-spacing: 0.06em;
+  }
+
+  .welcome-modal .intro-chg {
+    padding: 0.02em 0.06em;
+  }
+
+  .welcome-modal .intro-recording {
+    margin-top: 0.35rem;
+  }
+
+  .welcome-modal .intro-recording__video {
+    max-height: min(20svh, 9rem);
+  }
+
+  .welcome-modal .intro-recording-cap {
+    margin-top: 0.3rem;
+    font-size: 0.72rem;
+  }
+
+  .welcome-modal .intro-cta-wrap {
+    margin-top: 0.45rem;
+  }
+
+  .welcome-modal .intro-play {
+    min-height: 2.35rem;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 520px) and (max-height: 640px) {
+  .welcome-modal .intro-header--splash h1 {
+    font-size: 1.2rem;
+  }
+
+  .welcome-modal .landing-hook {
+    font-size: 0.8rem;
+    line-height: 1.32;
+  }
+
+  .welcome-modal .intro-word {
+    font-size: 0.8rem;
+  }
 }

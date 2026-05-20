@@ -44,7 +44,6 @@ const $current = document.getElementById("current-row");
 const $status = document.getElementById("status");
 const $kbd = document.getElementById("keyboard");
 const $btnUndo = document.getElementById("btn-undo");
-const $btnToday = document.getElementById("btn-today");
 const $btnPractice = document.getElementById("btn-practice");
 const $btnCopy = document.getElementById("btn-copy");
 const $typingHeading = document.getElementById("typing-heading");
@@ -420,11 +419,6 @@ window.addEventListener("keydown", (e) => {
 });
 
 $btnUndo.addEventListener("click", undoStep);
-$btnToday.addEventListener("click", () => {
-  if (!confirmReset()) return;
-  setPractice(false);
-  startGame();
-});
 $btnPractice.addEventListener("click", () => {
   if (!confirmReset()) return;
   setPractice(true);

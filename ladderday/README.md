@@ -10,9 +10,7 @@ Line up five-letter words from **Start** to **Goal**—only **one letter** may c
 
 **Legacy URL:** [`intro.html`](intro.html) redirects to `index.html`.
 
-**Today’s ladder:** same start/goal for everyone (UTC calendar day).
-
-**Practice:** `?practice=1` or **Random (practice)**.
+**Today’s ladder:** loads by default (same start/goal for everyone, UTC calendar day). **Random** starts a new practice puzzle; add **`?practice=1`** to the URL to open in practice mode.
 
 **Difficult mode:** turn on **Difficult mode** to cap your ladder at this puzzle’s shortest solution length (same limit for everyone on that day’s puzzle). Turn it off for unlimited steps. Optional URL: `?strict=1` to start with difficult mode on.
 
