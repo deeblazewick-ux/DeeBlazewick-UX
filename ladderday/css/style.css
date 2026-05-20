@@ -282,12 +282,6 @@ main {
   border-top: 1px solid var(--panel-border);
 }
 
-.current-entry {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-}
-
 .row {
   display: flex;
   width: 100%;
@@ -334,55 +328,6 @@ main {
   border-color: rgba(240, 160, 168, 0.55);
   background: var(--error-muted);
   color: var(--error);
-}
-
-/* Narrow viewports: system keyboard; hide on-screen QWERTY; invisible input over tiles */
-.word-input {
-  display: none;
-}
-
-@media (max-width: 639px) {
-  .keyboard {
-    display: none !important;
-  }
-
-  .current-entry {
-    cursor: pointer;
-  }
-
-  .current-entry .word-input {
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-sm);
-    opacity: 0;
-    color: transparent;
-    caret-color: transparent;
-    background: transparent;
-    z-index: 2;
-    font-size: 1rem;
-    min-height: 2.75rem;
-    box-sizing: border-box;
-  }
-
-  .current-entry:focus-within .current-wrap {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-    border-radius: var(--radius-sm);
-  }
-
-  .current-entry .word-input:disabled {
-    cursor: not-allowed;
-    pointer-events: none;
-  }
 }
 
 .keyboard {

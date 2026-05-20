@@ -41,10 +41,8 @@ function hamming(a, b) {
 const $ladder = document.getElementById("ladder-rows");
 const $anchors = document.getElementById("puzzle-anchors");
 const $current = document.getElementById("current-row");
-const $currentEntry = document.getElementById("current-entry");
 const $status = document.getElementById("status");
 const $kbd = document.getElementById("keyboard");
-const $wordInput = /** @type {HTMLInputElement | null} */ (document.getElementById("word-input"));
 const $btnUndo = document.getElementById("btn-undo");
 const $btnToday = document.getElementById("btn-today");
 const $btnPractice = document.getElementById("btn-practice");
@@ -68,23 +66,6 @@ let strictShortest = false;
 let diffHighlightIndices = null;
 /** @type {number} */
 let progressMsgCount = 0;
-
-/** Match phones / narrow layouts where we use the device keyboard instead of the on-screen one. */
-const mqNarrow = window.matchMedia("(max-width: 639px)");
-
-function isNarrowViewport() {
-  return mqNarrow.matches;
-}
-
-mqNarrow.addEventListener("change", () => {
-  renderAll();
-});
-
-function syncWordInputFromBuffer() {
-  if (!$wordInput) return;
-  if ($wordInput.value !== buffer) $wordInput.value = buffer;
-  $wordInput.disabled = won;
-}
 
 function isPracticeFromUrl() {
   return new URLSearchParams(window.location.search).has("practice");
@@ -244,17 +225,12 @@ function renderAll() {
   renderLadder();
   renderCurrent();
   renderKeyboard();
-  syncWordInputFromBuffer();
   $btnUndo.disabled = won || chain.length <= 1;
   syncDifficultSwitch();
   renderDifficultHint();
 }
 
 function renderKeyboard() {
-  if (isNarrowViewport()) {
-    $kbd.innerHTML = "";
-    return;
-  }
   const rows = [
     ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
     ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
@@ -322,7 +298,6 @@ function submitWord() {
     $status.setAttribute("aria-live", "assertive");
     setTimeout(() => $status.setAttribute("aria-live", "polite"), 100);
     renderCurrent();
-    syncWordInputFromBuffer();
     return;
   }
 
@@ -363,7 +338,6 @@ function submitWord() {
   }
   renderAll();
   scrollLadderToBottom();
-  if (!won && isNarrowViewport()) $wordInput?.focus({ preventScroll: true });
 }
 
 function undoStep() {
@@ -374,8 +348,7 @@ function undoStep() {
   renderAll();
   scrollLadderToBottom();
   announce("Undid last step.", "neutral");
-  if (isNarrowViewport()) $wordInput?.focus({ preventScroll: true });
-  else $typingHeading?.focus({ preventScroll: true });
+  $typingHeading?.focus({ preventScroll: true });
 }
 
 function onKeyLetter(letter) {
@@ -385,7 +358,6 @@ function onKeyLetter(letter) {
   buffer += letter.toLowerCase();
   renderCurrent();
   renderKeyboard();
-  syncWordInputFromBuffer();
 }
 
 function onKeyBackspace() {
@@ -394,7 +366,6 @@ function onKeyBackspace() {
   buffer = buffer.slice(0, -1);
   renderCurrent();
   renderKeyboard();
-  syncWordInputFromBuffer();
 }
 
 function onKeyEnter() {
@@ -433,7 +404,6 @@ async function copyResult() {
 
 window.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  if (e.target === $wordInput) return;
   if (e.key === "Enter") {
     e.preventDefault();
     onKeyEnter();
@@ -485,28 +455,6 @@ $difficultSwitch?.addEventListener("click", () => {
 
 $btnCopy.addEventListener("click", () => {
   void copyResult();
-});
-
-function onWordFieldInput() {
-  if (won || !$wordInput) return;
-  clearDiffHighlight();
-  const v = $wordInput.value.toLowerCase().replace(/[^a-z]/g, "").slice(0, 5);
-  if ($wordInput.value !== v) $wordInput.value = v;
-  buffer = v;
-  renderCurrent();
-}
-
-$wordInput?.addEventListener("input", onWordFieldInput);
-$wordInput?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    onKeyEnter();
-  }
-});
-
-$currentEntry?.addEventListener("click", () => {
-  if (won) return;
-  if (isNarrowViewport()) $wordInput?.focus({ preventScroll: true });
 });
 
 function isDemoWonFromUrl() {
